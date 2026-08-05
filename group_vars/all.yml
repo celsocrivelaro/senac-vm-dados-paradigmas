@@ -11,17 +11,20 @@ aluno_home: "{{ ansible_env.HOME }}"
 
 # --- PostgreSQL ---------------------------------------------------
 # A versão define o caminho dos configs: /etc/postgresql/<versao>/main
-postgres_versao: "16"
+# Precisa ser a que o Ubuntu empacota: 26.04 → 18; 24.04 → 16; 22.04 → 14.
+postgres_versao: "18"
 postgres_porta: 5432
 # "md5" ou "scram-sha-256". scram é o padrão moderno recomendado.
 postgres_metodo_auth: "scram-sha-256"
 
 # --- Airflow ------------------------------------------------------
-airflow_versao: "2.10.4"
+# Airflow 3.2.0+ é o primeiro a suportar Python 3.14 (o do Ubuntu 26.04).
+# O Airflow 2.x não roda no 3.14 — não existe constraints-3.14.txt para ele.
+airflow_versao: "3.3.0"
 airflow_home: "/opt/airflow"
 # A versão do Python precisa bater com a do sistema para o constraints
-# file do Airflow. 24.04 = 3.12; 22.04 = 3.10.
-airflow_python: "3.12"
+# file do Airflow. 26.04 = 3.14; 24.04 = 3.12; 22.04 = 3.10.
+airflow_python: "3.14"
 
 # --- Clojure ------------------------------------------------------
 clojure_versao: "1.12.0.1495"

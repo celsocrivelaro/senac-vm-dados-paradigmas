@@ -1,7 +1,7 @@
 ---
 # Python 3, ferramentas de ambiente e Scrapy.
 #
-# NOTA sobre o Ubuntu 24.04 (PEP 668): o sistema bloqueia "pip install"
+# NOTA sobre o Ubuntu 24.04+ (PEP 668): o sistema bloqueia "pip install"
 # global para não quebrar pacotes do SO. Por isso instalamos o Scrapy
 # pelo apt (python3-scrapy), que é a forma limpa. Para libs sem pacote
 # apt, o recomendado é venv (por projeto) ou pipx (ferramentas de CLI).

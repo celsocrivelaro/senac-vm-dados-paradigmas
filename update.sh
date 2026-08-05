@@ -5,6 +5,9 @@
 # =====================================================================
 set -euo pipefail
 
-REPO="https://github.com/SEU_USUARIO/aula-vm.git"
+REPO="https://github.com/celsocrivelaro/senac-vm.git"
 
-ansible-pull -U "$REPO" --ask-become-pass
+# --limit localhost: o ansible-pull, por padrão, limita a execução ao
+# hostname da máquina (ex.: "senac-bcc"), que não existe no inventário e
+# gera o aviso "Could not match supplied host pattern".
+ansible-pull -U "$REPO" --limit localhost --ask-become-pass

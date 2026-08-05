@@ -2,21 +2,25 @@
 # Playbook principal.
 # O ansible-pull procura por "local.yml" por padrão, então este é o
 # ponto de entrada quando o aluno roda:
-#   ansible-pull -U https://github.com/SEU_USUARIO/aula-vm.git
+#   ansible-pull -U https://github.com/celsocrivelaro/senac-vm.git
 #
 # Cada "role" abaixo é um módulo independente. Comente uma linha para
 # desativar um componente numa turma específica.
 
 - name: Configurar VM de aula
-  hosts: localhost
+  hosts: local
   connection: local
   become: true          # roda as tarefas com sudo por padrão
 
   roles:
-    - common       # pacotes base, utilitários, Lua 5.4
     - postgresql   # PostgreSQL + configuração em /etc/postgresql
-    - python       # Python 3, pip, venv, pipx, Scrapy
-    - airflow      # Apache Airflow (venv dedicado em /opt/airflow)
-    - rust         # Rustup (instalado no home do aluno)
-    - prolog       # SWI-Prolog
-    - clojure      # Clojure CLI (+ JDK)
+
+    # --- Desativadas por enquanto ------------------------------------
+    # As roles continuam no repositório (roles/), prontas para uso.
+    # Para ativar um componente, basta descomentar a linha.
+    # - common     # pacotes base, utilitários, Lua 5.4
+    # - python     # Python 3, pip, venv, pipx, Scrapy
+    # - airflow    # Apache Airflow (venv dedicado em /opt/airflow)
+    # - rust       # Rustup (instalado no home do aluno)
+    # - prolog     # SWI-Prolog
+    # - clojure    # Clojure CLI (+ JDK)

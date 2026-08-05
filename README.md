@@ -6,35 +6,45 @@ para receber as atualizações que você publica aqui.
 
 ## O que é instalado
 
+Ativo agora (veja `local.yml`):
+
 - **PostgreSQL** (com config versionada em `/etc/postgresql`)
+
+Prontas no repositório, mas **desativadas** (descomente a linha em
+`local.yml` para ligar):
+
 - **Apache Airflow** (venv dedicado em `/opt/airflow`, como serviço)
 - **Python 3**, pip, venv, pipx e **Scrapy**
-- **Lua 5.4** + `liblua5.4-dev`
+- **Lua 5.4** + `liblua5.4-dev` (role `common`, junto dos pacotes base)
 - **Rustup** (toolchain stable, no home do aluno)
 - **SWI-Prolog**
 - **Clojure** CLI (+ JDK)
 
 ## Para o aluno
 
-Primeira vez, numa VM limpa:
+Primeira vez, numa VM limpa — instale o Ansible e aplique a configuração:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/SEU_USUARIO/aula-vm/main/bootstrap.sh | bash
+sudo apt update && sudo apt install -y ansible git
+ansible-pull -U https://github.com/celsocrivelaro/senac-vm.git --limit localhost --ask-become-pass
 ```
 
-Depois, sempre que houver atualização:
+Depois, sempre que houver atualização, é o mesmo comando (ou o atalho
+`atualizar`, se você já criou o alias no `~/.bashrc`):
 
 ```bash
-./update.sh
+ansible-pull -U https://github.com/celsocrivelaro/senac-vm.git --limit localhost --ask-become-pass
 ```
 
-Ambos pedem a senha do `sudo` (necessária para instalar pacotes e mexer em `/etc`).
+Pede a senha do `sudo` (necessária para instalar pacotes e mexer em `/etc`).
+
+> `--limit localhost` evita o aviso `Could not match supplied host pattern`:
+> por padrão o `ansible-pull` limita a execução ao *hostname* da máquina, que
+> não existe no inventário deste repositório.
 
 ## Para você (mantenedor)
 
-1. Substitua `SEU_USUARIO` por seu usuário do GitHub em `bootstrap.sh`,
-   `update.sh` e neste README.
-2. Edite os arquivos e faça `git push`. Cada componente vive numa *role*:
+1. Edite os arquivos e faça `git push`. Cada componente vive numa *role*:
 
 ```
 local.yml              # lista as roles ativas (comente p/ desativar)
@@ -47,7 +57,7 @@ roles/
   rust/  prolog/  clojure/
 ```
 
-3. Para mudar uma config do Postgres, edite o template em
+2. Para mudar uma config do Postgres, edite o template em
    `roles/postgresql/templates/`. Na próxima vez que o aluno rodar `update.sh`,
    o Ansible aplica a mudança e reinicia o Postgres **só se o arquivo mudou**.
 
@@ -62,11 +72,15 @@ sudo ansible-playbook local.yml
 ## Observações honestas
 
 - **Airflow**: a versão do Python em `group_vars/all.yml` (`airflow_python`)
-  precisa bater com a do Ubuntu (24.04 → 3.12; 22.04 → 3.10), senão o
-  *constraints file* não é encontrado. A senha do admin aparece no log:
-  `journalctl -u airflow`.
+  precisa bater com a do Ubuntu (26.04 → 3.14; 24.04 → 3.12; 22.04 → 3.10),
+  senão o *constraints file* não é encontrado (erro 404 no pip). Atenção:
+  Python 3.14 só é suportado a partir do **Airflow 3.2.0** — por isso este
+  repositório usa o 3.3.0, e não mais o 2.10.4.
+  No Airflow 3 a senha do admin **não** aparece no log; ela fica em
+  `/opt/airflow/simple_auth_manager_passwords.json.generated`.
 - **Postgres**: a `postgres_versao` deve corresponder ao que o Ubuntu instala
-  (24.04 → 16). Se não bater, o caminho `/etc/postgresql/<versao>/main` não existe.
+  (26.04 → 18; 24.04 → 16; 22.04 → 14). Se não bater, o pacote
+  `postgresql-<versao>` não existe nos repositórios e o apt falha.
 - **Rust e Clojure** instalam por ferramentas próprias (rustup / script oficial),
   não por apt — é o caminho recomendado por esses projetos.
 - Teste tudo numa VM limpa antes da primeira aula; permissões de `sudo` são
