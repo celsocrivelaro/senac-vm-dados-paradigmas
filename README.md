@@ -69,6 +69,32 @@ Rode o playbook localmente sem clonar (a partir da pasta do repo):
 sudo ansible-playbook local.yml
 ```
 
+## Problemas comuns
+
+**`Timed out waiting for become success or become password prompt`**
+(e o sudo mostrando `Senha:`)
+
+O Ansible passa o próprio prompt ao sudo (`sudo -p "[sudo via ansible,
+key=...] password:"`) e espera exatamente por ele. O sudo só troca o prompt
+do PAM pelo dele quando o PAM pede a senha em inglês (`Password:`); num
+sistema em português o PAM diz `Senha:`, o sudo mantém esse texto e o
+Ansible espera até dar timeout — a senha digitada nunca chega a ser enviada.
+
+Solução usada aqui: rodar com `LC_ALL=C` (já está no `update.sh`).
+
+Se ainda falhar, force o sudo a sempre usar o prompt do `-p`, uma única vez
+por máquina:
+
+```bash
+echo 'Defaults passprompt_override' | sudo tee /etc/sudoers.d/ansible-prompt
+sudo chmod 440 /etc/sudoers.d/ansible-prompt
+```
+
+**`Could not match supplied host pattern, ignoring: senac-bcc`**
+
+Aviso inofensivo: o `ansible-pull` limita a execução ao hostname da máquina.
+Use `--limit localhost` (já está no `update.sh`) para não aparecer.
+
 ## Observações honestas
 
 - **Airflow**: a versão do Python em `group_vars/all.yml` (`airflow_python`)
