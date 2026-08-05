@@ -1,0 +1,28 @@
+---
+# Pacotes utilitários, ferramentas de build e Lua 5.4.
+
+- name: Atualizar o cache do apt
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600   # evita rodar "apt update" mais de 1x por hora
+
+- name: Instalar pacotes base
+  ansible.builtin.apt:
+    name:
+      - git
+      - vim
+      - tmux
+      - curl
+      - wget
+      - ca-certificates
+      - gnupg
+      - build-essential   # gcc/make etc. — necessário p/ rustup, libs nativas
+      - htop
+    state: present
+
+- name: Instalar Lua 5.4 e headers de desenvolvimento
+  ansible.builtin.apt:
+    name:
+      - lua5.4
+      - liblua5.4-dev
+    state: present

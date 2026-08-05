@@ -1,0 +1,30 @@
+---
+# Python 3, ferramentas de ambiente e Scrapy.
+#
+# NOTA sobre o Ubuntu 24.04 (PEP 668): o sistema bloqueia "pip install"
+# global para não quebrar pacotes do SO. Por isso instalamos o Scrapy
+# pelo apt (python3-scrapy), que é a forma limpa. Para libs sem pacote
+# apt, o recomendado é venv (por projeto) ou pipx (ferramentas de CLI).
+
+- name: Instalar Python 3, pip, venv e pipx
+  ansible.builtin.apt:
+    name:
+      - python3
+      - python3-pip
+      - python3-venv
+      - python3-full
+      - pipx
+    state: present
+    update_cache: true
+
+- name: Instalar Scrapy (pacote do Ubuntu)
+  ansible.builtin.apt:
+    name: python3-scrapy
+    state: present
+
+# pipx precisa que o diretório de binários esteja no PATH do aluno.
+- name: Garantir o PATH do pipx para o aluno
+  ansible.builtin.command: pipx ensurepath
+  become: true
+  become_user: "{{ aluno_usuario }}"
+  changed_when: false

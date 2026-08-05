@@ -1,0 +1,15 @@
+---
+# SWI-Prolog, a implementação mais comum para ensino.
+# O pacote do Ubuntu serve bem; se precisar da versão mais nova,
+# existe o PPA oficial "ppa:swi-prolog/stable" (comentado abaixo).
+
+# - name: Adicionar o PPA oficial do SWI-Prolog (versão mais recente)
+#   ansible.builtin.apt_repository:
+#     repo: ppa:swi-prolog/stable
+#     state: present
+
+- name: Instalar SWI-Prolog
+  ansible.builtin.apt:
+    name: swi-prolog
+    state: present
+    update_cache: true

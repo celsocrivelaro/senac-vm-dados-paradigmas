@@ -1,0 +1,13 @@
+# Gerado pelo Ansible — editar no repositório, não na máquina.
+# TYPE  DATABASE  USER  ADDRESS        METHOD
+
+# Conexões locais via socket Unix (usuário do sistema)
+local   all       all                  peer
+
+# Conexões locais via TCP (localhost)
+host    all       all   127.0.0.1/32   {{ postgres_metodo_auth }}
+host    all       all   ::1/128        {{ postgres_metodo_auth }}
+
+# Rede local — útil se o aluno acessa o Postgres de fora da VM.
+# Ajuste ou remova conforme sua topologia de rede.
+host    all       all   10.0.0.0/8     {{ postgres_metodo_auth }}

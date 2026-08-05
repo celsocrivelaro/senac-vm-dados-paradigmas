@@ -1,0 +1,22 @@
+---
+# Playbook principal.
+# O ansible-pull procura por "local.yml" por padrão, então este é o
+# ponto de entrada quando o aluno roda:
+#   ansible-pull -U https://github.com/SEU_USUARIO/aula-vm.git
+#
+# Cada "role" abaixo é um módulo independente. Comente uma linha para
+# desativar um componente numa turma específica.
+
+- name: Configurar VM de aula
+  hosts: localhost
+  connection: local
+  become: true          # roda as tarefas com sudo por padrão
+
+  roles:
+    - common       # pacotes base, utilitários, Lua 5.4
+    - postgresql   # PostgreSQL + configuração em /etc/postgresql
+    - python       # Python 3, pip, venv, pipx, Scrapy
+    - airflow      # Apache Airflow (venv dedicado em /opt/airflow)
+    - rust         # Rustup (instalado no home do aluno)
+    - prolog       # SWI-Prolog
+    - clojure      # Clojure CLI (+ JDK)

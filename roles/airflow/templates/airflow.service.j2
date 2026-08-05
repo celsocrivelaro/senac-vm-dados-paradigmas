@@ -1,0 +1,12 @@
+[Unit]
+Description=Apache Airflow (standalone) - VM de aula
+After=network.target postgresql.service
+
+[Service]
+User={{ aluno_usuario }}
+Environment=AIRFLOW_HOME={{ airflow_home }}
+ExecStart={{ airflow_home }}/venv/bin/airflow standalone
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

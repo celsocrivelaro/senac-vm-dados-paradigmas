@@ -1,0 +1,27 @@
+---
+# =====================================================================
+# Ponto central de configuração da VM de aula.
+# Ajuste estes valores e todas as roles se adaptam.
+# =====================================================================
+
+# Usuário do aluno (dono dos arquivos, quem roda rustup etc.).
+# ansible_user_id resolve para o usuário que rodou o comando.
+aluno_usuario: "{{ ansible_user_id }}"
+aluno_home: "{{ ansible_env.HOME }}"
+
+# --- PostgreSQL ---------------------------------------------------
+# A versão define o caminho dos configs: /etc/postgresql/<versao>/main
+postgres_versao: "16"
+postgres_porta: 5432
+# "md5" ou "scram-sha-256". scram é o padrão moderno recomendado.
+postgres_metodo_auth: "scram-sha-256"
+
+# --- Airflow ------------------------------------------------------
+airflow_versao: "2.10.4"
+airflow_home: "/opt/airflow"
+# A versão do Python precisa bater com a do sistema para o constraints
+# file do Airflow. 24.04 = 3.12; 22.04 = 3.10.
+airflow_python: "3.12"
+
+# --- Clojure ------------------------------------------------------
+clojure_versao: "1.12.0.1495"

@@ -1,0 +1,9 @@
+# Gerado pelo Ansible — NÃO editar na máquina, editar no repositório.
+# Este arquivo fica em conf.d/ e sobrescreve os valores padrão.
+
+listen_addresses = '*'
+port = {{ postgres_porta }}
+
+# Ajustes leves para uma VM de aula (mude conforme a RAM da VM):
+shared_buffers = 128MB
+max_connections = 50

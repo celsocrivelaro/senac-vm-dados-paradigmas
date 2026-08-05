@@ -1,0 +1,49 @@
+---
+# Apache Airflow num virtualenv dedicado em /opt/airflow.
+#
+# O Airflow NÃO tem pacote apt e é sensível a versões de dependências,
+# por isso a instalação usa o "constraints file" oficial do projeto
+# (a forma recomendada pela documentação do Airflow).
+
+- name: Criar o diretório do Airflow
+  ansible.builtin.file:
+    path: "{{ airflow_home }}"
+    state: directory
+    owner: "{{ aluno_usuario }}"
+    group: "{{ aluno_usuario }}"
+    mode: "0755"
+
+- name: Criar o virtualenv e instalar o Airflow (com constraints)
+  ansible.builtin.pip:
+    name: "apache-airflow=={{ airflow_versao }}"
+    virtualenv: "{{ airflow_home }}/venv"
+    virtualenv_command: "python{{ airflow_python }} -m venv"
+    extra_args: >-
+      --constraint
+      https://raw.githubusercontent.com/apache/airflow/constraints-{{ airflow_versao }}/constraints-{{ airflow_python }}.txt
+  become: true
+  become_user: "{{ aluno_usuario }}"
+  environment:
+    AIRFLOW_HOME: "{{ airflow_home }}"
+
+- name: Inicializar/migrar o banco de metadados do Airflow
+  ansible.builtin.command: "{{ airflow_home }}/venv/bin/airflow db migrate"
+  become: true
+  become_user: "{{ aluno_usuario }}"
+  environment:
+    AIRFLOW_HOME: "{{ airflow_home }}"
+  args:
+    creates: "{{ airflow_home }}/airflow.db"   # não roda de novo se já existe
+
+- name: Instalar o serviço systemd do Airflow
+  ansible.builtin.template:
+    src: airflow.service.j2
+    dest: /etc/systemd/system/airflow.service
+    mode: "0644"
+  notify: recarregar systemd
+
+- name: Habilitar e iniciar o Airflow
+  ansible.builtin.service:
+    name: airflow
+    state: started
+    enabled: true

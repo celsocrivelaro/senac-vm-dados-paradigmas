@@ -1,0 +1,40 @@
+---
+# Instala o PostgreSQL do repositório do Ubuntu e ajusta a config em /etc.
+
+- name: Instalar PostgreSQL e a biblioteca Python (para os módulos community.postgresql)
+  ansible.builtin.apt:
+    name:
+      - "postgresql-{{ postgres_versao }}"
+      - "postgresql-client-{{ postgres_versao }}"
+      - python3-psycopg2
+    state: present
+    update_cache: true
+
+- name: Garantir que o serviço está ativo e habilitado no boot
+  ansible.builtin.service:
+    name: postgresql
+    state: started
+    enabled: true
+
+# --- Configuração em /etc/postgresql/<versao>/main -------------------
+# Os dois arquivos abaixo são gerados a partir de templates versionados
+# no repositório. Quando você edita o template e o aluno roda
+# "ansible-pull", só então o postgres é reiniciado (via handler).
+
+- name: Configurar postgresql.conf
+  ansible.builtin.template:
+    src: postgresql.conf.j2
+    dest: "/etc/postgresql/{{ postgres_versao }}/main/conf.d/aula.conf"
+    owner: postgres
+    group: postgres
+    mode: "0644"
+  notify: reiniciar postgres
+
+- name: Configurar pg_hba.conf (regras de autenticação)
+  ansible.builtin.template:
+    src: pg_hba.conf.j2
+    dest: "/etc/postgresql/{{ postgres_versao }}/main/pg_hba.conf"
+    owner: postgres
+    group: postgres
+    mode: "0640"
+  notify: reiniciar postgres
