@@ -42,13 +42,13 @@
     - dbeaver      # DBeaver Community + conexão pronta com o Postgres local
     - vscode       # VS Code + extensões de Python e SQL
     - chrome       # Google Chrome
+    - airflow      # Apache Airflow 3 (venv dedicado em /opt/airflow)
 
     # --- Desativadas por enquanto ------------------------------------
     # As roles continuam no repositório (roles/), prontas para uso.
     # Para ativar um componente, basta descomentar a linha.
     # - common     # pacotes base, utilitários, Lua 5.4
     # - python     # Python 3, pip, venv, pipx, Scrapy
-    # - airflow    # Apache Airflow (venv dedicado em /opt/airflow)
     # - rust       # Rustup (instalado no home do aluno)
     # - prolog     # SWI-Prolog
     # - clojure    # Clojure CLI (+ JDK)

@@ -5,6 +5,18 @@
 # por isso a instalação usa o "constraints file" oficial do projeto
 # (a forma recomendada pela documentação do Airflow).
 
+# A role não depende da role "python" estar ativa: instala aqui o que precisa
+# para criar o venv. Usamos python3-venv (e não python3.14-venv) porque é um
+# metapacote que aponta para o Python padrão do Ubuntu — que é justamente o
+# que airflow_python precisa ser.
+- name: Instalar o suporte a venv do Python
+  ansible.builtin.apt:
+    name:
+      - python3-venv
+      - python3-pip
+    state: present
+    update_cache: true
+
 - name: Criar o diretório do Airflow
   ansible.builtin.file:
     path: "{{ airflow_home }}"

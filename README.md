@@ -15,11 +15,11 @@ Ativo agora (veja `local.yml`):
 - **VS Code** (repositório apt oficial da Microsoft) com as extensões de
   Python e SQL listadas em `group_vars/all.yml`
 - **Google Chrome** (repositório apt oficial do Google)
+- **Apache Airflow 3** (venv dedicado em `/opt/airflow`, como serviço systemd)
 
 Prontas no repositório, mas **desativadas** (descomente a linha em
 `local.yml` para ligar):
 
-- **Apache Airflow** (venv dedicado em `/opt/airflow`, como serviço)
 - **Python 3**, pip, venv, pipx e **Scrapy**
 - **Lua 5.4** + `liblua5.4-dev` (role `common`, junto dos pacotes base)
 - **Rustup** (toolchain stable, no home do aluno)
