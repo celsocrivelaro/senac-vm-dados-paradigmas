@@ -27,10 +27,15 @@ Primeira vez, numa VM limpa — instale o Ansible, libere o sudo sem senha
 
 ```bash
 sudo apt update && sudo apt install -y ansible git
-echo "$USER ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/aula-ansible
+echo 'estudante ALL=(ALL) NOPASSWD: ALL' | sudo tee /etc/sudoers.d/aula-ansible
 sudo chmod 440 /etc/sudoers.d/aula-ansible
+sudo visudo -c -f /etc/sudoers.d/aula-ansible    # confira: "parsed OK"
 ansible-pull -U https://github.com/celsocrivelaro/senac-vm.git --limit localhost
 ```
+
+Troque `estudante` pelo usuário da VM, se for outro. Use **aspas simples** e
+o nome literal: com aspas duplas, um `$USER` que não expande vira o texto
+`$USER` dentro do arquivo, e o sudo recusa (`embedded $ in username`).
 
 Depois, sempre que houver atualização, é só o último comando (ou o atalho
 `atualizar`, se você já criou o alias no `~/.bashrc`):
@@ -87,12 +92,18 @@ não usar senha no become — sudo sem senha para o aluno, **um comando, uma vez
 por máquina**:
 
 ```bash
-echo "$USER ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/aula-ansible
+echo 'estudante ALL=(ALL) NOPASSWD: ALL' | sudo tee /etc/sudoers.d/aula-ansible
 sudo chmod 440 /etc/sudoers.d/aula-ansible
+sudo visudo -c -f /etc/sudoers.d/aula-ansible    # confira: "parsed OK"
 ```
 
 Depois disso o `update.sh` roda sem pedir senha nenhuma. Numa VM de aula isso
 é aceitável: o aluno já tem sudo completo de qualquer forma.
+
+> **Sempre valide com `visudo -c`.** Um arquivo com erro de sintaxe em
+> `/etc/sudoers.d/` pode derrubar o sudo da máquina inteira. Se isso
+> acontecer e o sudo parar de funcionar, remova o arquivo com
+> `pkexec rm /etc/sudoers.d/aula-ansible`.
 
 > Não use `Defaults passprompt_override`: essa opção é do sudo original e o
 > sudo-rs a rejeita com `unknown setting`.
