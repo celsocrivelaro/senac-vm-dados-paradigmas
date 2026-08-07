@@ -1,0 +1,56 @@
+---
+# DBeaver Community — cliente gráfico de banco de dados.
+#
+# Instalado pelo repositório apt oficial da DBeaver Corp (e não por .deb
+# avulso ou snap): assim o aluno recebe atualizações junto com o resto do
+# sistema, e o repositório publica amd64 e arm64, funcionando tanto em VM
+# x86 quanto em Mac com Apple Silicon.
+
+- name: Garantir o diretório de chaves do apt
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+# A chave vem em formato "armored" (.asc). O apt aceita esse formato direto
+# em signed-by desde o 22.04, então não precisamos converter com gpg.
+- name: Baixar a chave de assinatura do repositório do DBeaver
+  ansible.builtin.get_url:
+    url: https://dbeaver.io/debs/dbeaver.gpg.key
+    dest: /etc/apt/keyrings/dbeaver.asc
+    mode: "0644"
+
+# Repositório "flat" (sem distribuição/componente): daí o "/" no final.
+- name: Adicionar o repositório do DBeaver
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/dbeaver.asc] https://dbeaver.io/debs/dbeaver-ce /"
+    filename: dbeaver
+    state: present
+
+- name: Instalar o DBeaver Community
+  ansible.builtin.apt:
+    name: dbeaver-ce
+    state: present
+    update_cache: true
+
+# --- Conexão pronta com o Postgres local ----------------------------
+# O DBeaver guarda as conexões num JSON dentro do workspace do aluno.
+
+- name: Criar o diretório de configuração do workspace do DBeaver
+  ansible.builtin.file:
+    path: "{{ dbeaver_workspace }}/General/.dbeaver"
+    state: directory
+    owner: "{{ aluno_usuario }}"
+    group: "{{ aluno_usuario }}"
+    mode: "0755"
+
+# force: false é essencial — se o aluno já tem conexões salvas, este arquivo
+# NÃO é sobrescrito. Só é criado numa VM que ainda não abriu o DBeaver.
+- name: Configurar a conexão com o PostgreSQL local
+  ansible.builtin.template:
+    src: data-sources.json.j2
+    dest: "{{ dbeaver_workspace }}/General/.dbeaver/data-sources.json"
+    owner: "{{ aluno_usuario }}"
+    group: "{{ aluno_usuario }}"
+    mode: "0644"
+    force: false

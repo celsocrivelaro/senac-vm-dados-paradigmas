@@ -1,0 +1,22 @@
+{
+  "folders": {},
+  "connections": {
+    "postgres-jdbc-aula-local": {
+      "provider": "postgresql",
+      "driver": "postgres-jdbc",
+      "name": "PostgreSQL local (aula)",
+      "description": "Conexão criada pelo Ansible. Usuário: {{ postgres_usuario_aluno }}",
+      "save-password": false,
+      "configuration": {
+        "host": "localhost",
+        "port": "{{ postgres_porta }}",
+        "database": "postgres",
+        "url": "jdbc:postgresql://localhost:{{ postgres_porta }}/postgres",
+        "configurationType": "MANUAL",
+        "type": "dev",
+        "auth-model": "native",
+        "user": "{{ postgres_usuario_aluno }}"
+      }
+    }
+  }
+}

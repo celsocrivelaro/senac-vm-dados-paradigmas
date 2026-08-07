@@ -20,6 +20,17 @@ postgres_porta: 5432
 # "md5" ou "scram-sha-256". scram é o padrão moderno recomendado.
 postgres_metodo_auth: "scram-sha-256"
 
+# Role de login do aluno no Postgres, usada pela conexão do DBeaver.
+# A senha fica em texto claro de propósito: é VM de aula em rede local, e
+# exigir ansible-vault acabaria com o "um comando só" do ansible-pull.
+# Troque por turma se quiser.
+postgres_usuario_aluno: "{{ aluno_usuario }}"
+postgres_senha_aluno: "estudante"
+
+# --- DBeaver --------------------------------------------------------
+# Workspace padrão do DBeaver 21+ (o "workspace6").
+dbeaver_workspace: "{{ aluno_home }}/.local/share/DBeaverData/workspace6"
+
 # --- Airflow ------------------------------------------------------
 # Airflow 3.2.0+ é o primeiro a suportar Python 3.14 (o do Ubuntu 26.04).
 # O Airflow 2.x não roda no 3.14 — não existe constraints-3.14.txt para ele.

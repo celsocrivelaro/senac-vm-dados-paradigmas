@@ -39,6 +39,7 @@
 
   roles:
     - postgresql   # PostgreSQL + configuração em /etc/postgresql
+    - dbeaver      # DBeaver Community + conexão pronta com o Postgres local
 
     # --- Desativadas por enquanto ------------------------------------
     # As roles continuam no repositório (roles/), prontas para uso.

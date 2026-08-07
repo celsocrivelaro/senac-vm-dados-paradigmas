@@ -7,6 +7,9 @@
       - "postgresql-{{ postgres_versao }}"
       - "postgresql-client-{{ postgres_versao }}"
       - python3-psycopg2
+      # acl: necessário para o Ansible trocar de root para o usuário postgres
+      # sem esbarrar em "Failed to set permissions on the temporary files".
+      - acl
     state: present
     update_cache: true
 
@@ -38,3 +41,17 @@
     group: postgres
     mode: "0640"
   notify: reiniciar postgres
+
+# --- Usuário do aluno ------------------------------------------------
+# O DBeaver conecta por TCP (o driver JDBC não fala socket Unix), e em TCP o
+# pg_hba exige senha. O "peer" do socket não vale aqui — por isso o aluno
+# precisa de uma role própria no Postgres, com senha.
+
+- name: Criar a role do aluno no PostgreSQL
+  community.postgresql.postgresql_user:
+    name: "{{ postgres_usuario_aluno }}"
+    password: "{{ postgres_senha_aluno }}"
+    role_attr_flags: LOGIN,CREATEDB
+    state: present
+  become: true
+  become_user: postgres

@@ -8,7 +8,10 @@ para receber as atualizações que você publica aqui.
 
 Ativo agora (veja `local.yml`):
 
-- **PostgreSQL** (com config versionada em `/etc/postgresql`)
+- **PostgreSQL** (com config versionada em `/etc/postgresql`) + uma role de
+  login para o aluno
+- **DBeaver Community** (repositório apt oficial) já com a conexão
+  `PostgreSQL local (aula)` criada
 
 Prontas no repositório, mas **desativadas** (descomente a linha em
 `local.yml` para ligar):
@@ -54,6 +57,7 @@ group_vars/all.yml     # versões e parâmetros centrais
 roles/
   common/              # pacotes base + Lua
   postgresql/          # inclui templates de postgresql.conf e pg_hba.conf
+  dbeaver/             # repo apt oficial + data-sources.json do aluno
   python/              # pip, venv, pipx, Scrapy
   airflow/             # venv + serviço systemd
   rust/  prolog/  clojure/
@@ -147,6 +151,13 @@ Use `--limit localhost` (já está no `update.sh`) para não aparecer.
 - **Postgres**: a `postgres_versao` deve corresponder ao que o Ubuntu instala
   (26.04 → 18; 24.04 → 16; 22.04 → 14). Se não bater, o pacote
   `postgresql-<versao>` não existe nos repositórios e o apt falha.
+- **DBeaver**: a conexão vem pronta, mas **sem a senha salva** — o aluno digita
+  na primeira vez (usuário e senha em `group_vars/all.yml`, padrão
+  `estudante`/`estudante`) e marca "salvar" se quiser. O DBeaver guarda senha
+  num arquivo cifrado, e gerar isso pelo Ansible quebraria a cada mudança de
+  formato. O `data-sources.json` só é escrito se ainda não existir
+  (`force: false`), então quem já tem conexões salvas não perde nada — e
+  quem já abriu o DBeaver antes desta role não recebe a conexão pronta.
 - **Rust e Clojure** instalam por ferramentas próprias (rustup / script oficial),
   não por apt — é o caminho recomendado por esses projetos.
 - Teste tudo numa VM limpa antes da primeira aula; permissões de `sudo` são
