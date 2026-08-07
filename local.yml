@@ -12,6 +12,31 @@
   connection: local
   become: true          # roda as tarefas com sudo por padrão
 
+  # VM que ficou suspensa ou voltou de snapshot acorda com o relógio atrasado.
+  # Aí o apt recusa os índices do Ubuntu com "Release file is not valid yet"
+  # e nada se instala. Então acerta a hora antes de qualquer coisa.
+  pre_tasks:
+    - name: Ativar a sincronização de hora por NTP
+      ansible.builtin.command: timedatectl set-ntp true
+      changed_when: false
+
+    - name: Esperar o relógio sincronizar
+      ansible.builtin.command: timedatectl show --property=NTPSynchronized --value
+      register: relogio
+      until: relogio.stdout == "yes"
+      retries: 12
+      delay: 5
+      changed_when: false
+      failed_when: false
+
+    - name: Avisar se o relógio não sincronizou
+      ansible.builtin.fail:
+        msg: >-
+          O relógio da VM não sincronizou (hora atual: {{ ansible_date_time.iso8601 }}).
+          O apt vai recusar os índices do Ubuntu. Acerte a hora manualmente com
+          "sudo timedatectl set-time 'AAAA-MM-DD HH:MM:SS'" e rode de novo.
+      when: relogio.stdout != "yes"
+
   roles:
     - postgresql   # PostgreSQL + configuração em /etc/postgresql
 

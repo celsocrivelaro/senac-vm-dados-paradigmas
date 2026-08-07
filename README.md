@@ -113,6 +113,23 @@ original (`sudo apt install sudo`, que remove o sudo-rs). Funciona, mas foge
 do padrão da distribuição — o Ubuntu 26.10 pretende deixar o sudo-rs como
 único provedor.
 
+**`E:Release file ... is not valid yet (invalid for another 1d 5h ...)`**
+
+O relógio da VM está atrasado. O apt compara a data do arquivo `Release` com
+a hora local; se a VM acha que ainda é anteontem, o índice do Ubuntu parece
+"do futuro" e é recusado — nenhum pacote instala. Acontece com VM que ficou
+suspensa ou voltou de snapshot.
+
+O `local.yml` já tenta corrigir sozinho (`pre_tasks` liga o NTP e espera a
+sincronização). Se mesmo assim falhar, acerte à mão:
+
+```bash
+sudo timedatectl set-ntp false
+sudo timedatectl set-time "2026-08-07 14:30:00"
+sudo timedatectl set-ntp true
+timedatectl status     # confira "System clock synchronized: yes"
+```
+
 **`Could not match supplied host pattern, ignoring: senac-bcc`**
 
 Aviso inofensivo: o `ansible-pull` limita a execução ao hostname da máquina.
