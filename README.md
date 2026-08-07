@@ -15,7 +15,8 @@ Ativo agora (veja `local.yml`):
 - **VS Code** (repositório apt oficial da Microsoft) com as extensões de
   Python e SQL listadas em `group_vars/all.yml`
 - **Google Chrome** (repositório apt oficial do Google)
-- **Apache Airflow 3** (venv dedicado em `/opt/airflow`, como serviço systemd)
+- **Apache Airflow 3** (venv dedicado em `/opt/airflow`, como serviço systemd),
+  em <http://localhost:9876>, login `senac`/`senac`
 
 Prontas no repositório, mas **desativadas** (descomente a linha em
 `local.yml` para ligar):
@@ -151,8 +152,10 @@ Use `--limit localhost` (já está no `update.sh`) para não aparecer.
   senão o *constraints file* não é encontrado (erro 404 no pip). Atenção:
   Python 3.14 só é suportado a partir do **Airflow 3.2.0** — por isso este
   repositório usa o 3.3.0, e não mais o 2.10.4.
-  No Airflow 3 a senha do admin **não** aparece no log; ela fica em
-  `/opt/airflow/simple_auth_manager_passwords.json.generated`.
+  O login da interface web é fixado pelo repositório (`airflow_usuario` e
+  `airflow_senha`, padrão `senac`/`senac`), gravado em
+  `/opt/airflow/simple_auth_manager_passwords.json`. Sem isso o Airflow 3
+  sortearia uma senha diferente em cada VM e nem a mostraria no log.
 - **Postgres**: a `postgres_versao` deve corresponder ao que o Ubuntu instala
   (26.04 → 18; 24.04 → 16; 22.04 → 14). Se não bater, o pacote
   `postgresql-<versao>` não existe nos repositórios e o apt falha.

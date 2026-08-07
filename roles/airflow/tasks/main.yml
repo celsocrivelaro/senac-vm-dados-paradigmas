@@ -47,6 +47,24 @@
   args:
     creates: "{{ airflow_home }}/airflow.db"   # não roda de novo se já existe
 
+# O simple auth manager lê este arquivo na subida. Sorteando a senha, cada VM
+# ficaria com uma diferente — aqui ela é fixa e igual para a turma inteira.
+- name: Definir o usuário e a senha da interface web
+  ansible.builtin.template:
+    src: simple_auth_manager_passwords.json.j2
+    dest: "{{ airflow_senhas_arquivo }}"
+    owner: "{{ aluno_usuario }}"
+    group: "{{ aluno_usuario }}"
+    mode: "0600"
+  notify: reiniciar airflow
+
+# A senha sorteada na primeira execução fica para trás neste arquivo; apagar
+# evita que o aluno ache credencial velha e tente usá-la.
+- name: Remover o arquivo de senha sorteada da primeira execução
+  ansible.builtin.file:
+    path: "{{ airflow_home }}/simple_auth_manager_passwords.json.generated"
+    state: absent
+
 - name: Instalar o serviço systemd do Airflow
   ansible.builtin.template:
     src: airflow.service.j2

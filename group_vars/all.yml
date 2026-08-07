@@ -44,6 +44,16 @@ dbeaver_workspace: "{{ aluno_home }}/.local/share/DBeaverData/workspace6"
 # O Airflow 2.x não roda no 3.14 — não existe constraints-3.14.txt para ele.
 airflow_versao: "3.3.0"
 airflow_home: "/opt/airflow"
+# Porta do api-server (o "webserver" do Airflow 2 virou api-server no 3).
+airflow_porta: 9876
+# Login do aluno na interface web. O papel "admin" é um dos quatro do simple
+# auth manager: viewer, user, op, admin.
+airflow_usuario: "senac"
+airflow_senha: "senac"
+# Arquivo de senhas do simple auth manager. Apontamos para um caminho nosso
+# em vez do "...json.generated" padrão, deixando claro que quem manda aqui é
+# o repositório, e não a senha sorteada na primeira execução.
+airflow_senhas_arquivo: "{{ airflow_home }}/simple_auth_manager_passwords.json"
 # A versão do Python precisa bater com a do sistema para o constraints
 # file do Airflow. 26.04 = 3.14; 24.04 = 3.12; 22.04 = 3.10.
 airflow_python: "3.14"

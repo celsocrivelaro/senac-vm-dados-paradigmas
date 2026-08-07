@@ -10,6 +10,9 @@ Environment=AIRFLOW_HOME={{ airflow_home }}
 # padrão do systemd não inclui o venv, então os quatro morrem com "No such
 # file or directory" enquanto o processo pai continua de pé.
 Environment=PATH={{ airflow_home }}/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=AIRFLOW__API__PORT={{ airflow_porta }}
+Environment=AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS={{ airflow_usuario }}:admin
+Environment=AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORDS_FILE={{ airflow_senhas_arquivo }}
 ExecStart={{ airflow_home }}/venv/bin/airflow standalone
 Restart=on-failure
 
