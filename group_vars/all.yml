@@ -5,9 +5,12 @@
 # =====================================================================
 
 # Usuário do aluno (dono dos arquivos, quem roda rustup etc.).
-# ansible_user_id resolve para o usuário que rodou o comando.
-aluno_usuario: "{{ ansible_user_id }}"
-aluno_home: "{{ ansible_env.HOME }}"
+# O playbook roda via "sudo ansible-pull", ou seja, como root — então
+# ansible_user_id seria "root" e o rustup/pipx iria para /root. SUDO_USER
+# guarda quem chamou o sudo, que é o aluno. O fallback cobre o caso de rodar
+# sem sudo (ansible-playbook direto, em teste).
+aluno_usuario: "{{ lookup('env', 'SUDO_USER') | default(ansible_user_id, true) }}"
+aluno_home: "{{ ('~' ~ aluno_usuario) | expanduser }}"
 
 # --- PostgreSQL ---------------------------------------------------
 # A versão define o caminho dos configs: /etc/postgresql/<versao>/main

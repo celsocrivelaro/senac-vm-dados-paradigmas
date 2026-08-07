@@ -22,27 +22,23 @@ Prontas no repositório, mas **desativadas** (descomente a linha em
 
 ## Para o aluno
 
-Primeira vez, numa VM limpa — instale o Ansible, libere o sudo sem senha
-(obrigatório no 26.04, veja "Problemas comuns") e aplique a configuração:
+Primeira vez, numa VM limpa — instale o Ansible e aplique a configuração:
 
 ```bash
 sudo apt update && sudo apt install -y ansible git
-echo 'estudante ALL=(ALL) NOPASSWD: ALL' | sudo tee /etc/sudoers.d/aula-ansible
-sudo chmod 440 /etc/sudoers.d/aula-ansible
-sudo visudo -c -f /etc/sudoers.d/aula-ansible    # confira: "parsed OK"
-ansible-pull -U https://github.com/celsocrivelaro/senac-vm.git --limit localhost
+sudo ansible-pull -U https://github.com/celsocrivelaro/senac-vm.git --limit localhost
 ```
-
-Troque `estudante` pelo usuário da VM, se for outro. Use **aspas simples** e
-o nome literal: com aspas duplas, um `$USER` que não expande vira o texto
-`$USER` dentro do arquivo, e o sudo recusa (`embedded $ in username`).
 
 Depois, sempre que houver atualização, é só o último comando (ou o atalho
 `atualizar`, se você já criou o alias no `~/.bashrc`):
 
 ```bash
-ansible-pull -U https://github.com/celsocrivelaro/senac-vm.git --limit localhost
+sudo ansible-pull -U https://github.com/celsocrivelaro/senac-vm.git --limit localhost
 ```
+
+O `sudo` na frente é proposital: no Ubuntu 26.04 o Ansible não consegue
+enviar a senha do sudo por conta própria (veja "Problemas comuns"), então o
+playbook roda já como root e é o sudo que pede a senha, no prompt dele.
 
 > `--limit localhost` evita o aviso `Could not match supplied host pattern`:
 > por padrão o `ansible-pull` limita a execução ao *hostname* da máquina, que
@@ -87,31 +83,35 @@ o momento de enviar a senha. O sudo-rs não faz essa reescrita — ele imprime
 o prompt do Ansible entre colchetes e repassa a autenticação ao PAM. Ou seja:
 **become com senha não funciona no 26.04**, independente de idioma.
 
-É uma incompatibilidade conhecida (ansible#85837, sudo-rs#1461). A solução é
-não usar senha no become — sudo sem senha para o aluno, **um comando, uma vez
-por máquina**:
+É uma incompatibilidade conhecida (ansible#85837, sudo-rs#1461). A solução
+adotada aqui é tirar o Ansible dessa conversa: rodar o playbook já como root,
+com `sudo` na frente, e deixar o próprio sudo pedir a senha no prompt normal
+dele. É o que o `update.sh` faz.
 
 ```bash
-echo 'estudante ALL=(ALL) NOPASSWD: ALL' | sudo tee /etc/sudoers.d/aula-ansible
-sudo chmod 440 /etc/sudoers.d/aula-ansible
-sudo visudo -c -f /etc/sudoers.d/aula-ansible    # confira: "parsed OK"
+sudo ansible-pull -U https://github.com/celsocrivelaro/senac-vm.git --limit localhost
 ```
 
-Depois disso o `update.sh` roda sem pedir senha nenhuma. Numa VM de aula isso
-é aceitável: o aluno já tem sudo completo de qualquer forma.
+Como o playbook roda como root, `ansible_user_id` seria `root` — por isso
+`aluno_usuario` em `group_vars/all.yml` vem de `SUDO_USER`, para que rustup,
+pipx e afins caiam no home do aluno, e não em `/root`.
 
-> **Sempre valide com `visudo -c`.** Um arquivo com erro de sintaxe em
-> `/etc/sudoers.d/` pode derrubar o sudo da máquina inteira. Se isso
-> acontecer e o sudo parar de funcionar, remova o arquivo com
-> `pkexec rm /etc/sudoers.d/aula-ansible`.
+**Duas coisas que NÃO funcionam** (ambas testadas no 26.04):
 
-> Não use `Defaults passprompt_override`: essa opção é do sudo original e o
-> sudo-rs a rejeita com `unknown setting`.
+- `Defaults passprompt_override` — opção do sudo original; o sudo-rs rejeita
+  com `unknown setting`.
+- Drop-in `NOPASSWD` em `/etc/sudoers.d/` — funciona em teoria, mas é
+  arriscado: **um erro de sintaxe ali derruba o sudo da máquina inteira**, e o
+  sudo-rs falha fechado. Se isso acontecer, o sudo não serve nem para
+  desfazer; recupere com `pkexec rm /etc/sudoers.d/<arquivo>` ou pelo modo de
+  recuperação do GRUB (root shell → `mount -o remount,rw /` → apague o
+  arquivo). Se for mexer nesse diretório, use sempre `sudo visudo -f`, que
+  valida antes de salvar.
 
-Alternativa, se você preferir manter a senha: reinstalar o sudo original
-(`sudo apt install sudo`, que remove o sudo-rs). Funciona, mas foge do padrão
-da distribuição — o Ubuntu 26.10 pretende deixar o sudo-rs como único
-provedor.
+Alternativa, se você quiser o `--ask-become-pass` de volta: reinstalar o sudo
+original (`sudo apt install sudo`, que remove o sudo-rs). Funciona, mas foge
+do padrão da distribuição — o Ubuntu 26.10 pretende deixar o sudo-rs como
+único provedor.
 
 **`Could not match supplied host pattern, ignoring: senac-bcc`**
 
