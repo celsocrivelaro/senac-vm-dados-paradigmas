@@ -22,21 +22,22 @@ Prontas no repositório, mas **desativadas** (descomente a linha em
 
 ## Para o aluno
 
-Primeira vez, numa VM limpa — instale o Ansible e aplique a configuração:
+Primeira vez, numa VM limpa — instale o Ansible, libere o sudo sem senha
+(obrigatório no 26.04, veja "Problemas comuns") e aplique a configuração:
 
 ```bash
 sudo apt update && sudo apt install -y ansible git
-ansible-pull -U https://github.com/celsocrivelaro/senac-vm.git --limit localhost --ask-become-pass
+echo "$USER ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/aula-ansible
+sudo chmod 440 /etc/sudoers.d/aula-ansible
+ansible-pull -U https://github.com/celsocrivelaro/senac-vm.git --limit localhost
 ```
 
-Depois, sempre que houver atualização, é o mesmo comando (ou o atalho
+Depois, sempre que houver atualização, é só o último comando (ou o atalho
 `atualizar`, se você já criou o alias no `~/.bashrc`):
 
 ```bash
-ansible-pull -U https://github.com/celsocrivelaro/senac-vm.git --limit localhost --ask-become-pass
+ansible-pull -U https://github.com/celsocrivelaro/senac-vm.git --limit localhost
 ```
-
-Pede a senha do `sudo` (necessária para instalar pacotes e mexer em `/etc`).
 
 > `--limit localhost` evita o aviso `Could not match supplied host pattern`:
 > por padrão o `ansible-pull` limita a execução ao *hostname* da máquina, que
@@ -72,23 +73,34 @@ sudo ansible-playbook local.yml
 ## Problemas comuns
 
 **`Timed out waiting for become success or become password prompt`**
-(e o sudo mostrando `Senha:`)
+(e o sudo mostrando `[sudo: [sudo via ansible, key=...] password:] Senha:`)
 
-O Ansible passa o próprio prompt ao sudo (`sudo -p "[sudo via ansible,
-key=...] password:"`) e espera exatamente por ele. O sudo só troca o prompt
-do PAM pelo dele quando o PAM pede a senha em inglês (`Password:`); num
-sistema em português o PAM diz `Senha:`, o sudo mantém esse texto e o
-Ansible espera até dar timeout — a senha digitada nunca chega a ser enviada.
+O Ubuntu 26.04 substituiu o sudo original pelo **sudo-rs** (reescrita em
+Rust). O sudo original capturava o prompt de senha do PAM e o reescrevia com
+o que o Ansible passa em `-p`; o Ansible depende exatamente disso para saber
+o momento de enviar a senha. O sudo-rs não faz essa reescrita — ele imprime
+o prompt do Ansible entre colchetes e repassa a autenticação ao PAM. Ou seja:
+**become com senha não funciona no 26.04**, independente de idioma.
 
-Solução usada aqui: rodar com `LC_ALL=C` (já está no `update.sh`).
-
-Se ainda falhar, force o sudo a sempre usar o prompt do `-p`, uma única vez
-por máquina:
+É uma incompatibilidade conhecida (ansible#85837, sudo-rs#1461). A solução é
+não usar senha no become — sudo sem senha para o aluno, **um comando, uma vez
+por máquina**:
 
 ```bash
-echo 'Defaults passprompt_override' | sudo tee /etc/sudoers.d/ansible-prompt
-sudo chmod 440 /etc/sudoers.d/ansible-prompt
+echo "$USER ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/aula-ansible
+sudo chmod 440 /etc/sudoers.d/aula-ansible
 ```
+
+Depois disso o `update.sh` roda sem pedir senha nenhuma. Numa VM de aula isso
+é aceitável: o aluno já tem sudo completo de qualquer forma.
+
+> Não use `Defaults passprompt_override`: essa opção é do sudo original e o
+> sudo-rs a rejeita com `unknown setting`.
+
+Alternativa, se você preferir manter a senha: reinstalar o sudo original
+(`sudo apt install sudo`, que remove o sudo-rs). Funciona, mas foge do padrão
+da distribuição — o Ubuntu 26.10 pretende deixar o sudo-rs como único
+provedor.
 
 **`Could not match supplied host pattern, ignoring: senac-bcc`**
 

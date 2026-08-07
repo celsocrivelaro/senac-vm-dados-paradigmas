@@ -11,10 +11,10 @@ REPO="https://github.com/celsocrivelaro/senac-vm.git"
 # hostname da máquina (ex.: "senac-bcc"), que não existe no inventário e
 # gera o aviso "Could not match supplied host pattern".
 #
-# LC_ALL=C: o Ansible espera o prompt de senha que ele mesmo passa em
-# "sudo -p". O sudo só usa esse prompt quando o PAM pede a senha em inglês
-# ("Password:"); num sistema em português o PAM diz "Senha:", o sudo mantém
-# o prompt dele e o Ansible fica esperando para sempre ("Timed out waiting
-# for become success or become password prompt"). Forçar o locale C resolve
-# sem precisar mexer no sudoers.
-LC_ALL=C ansible-pull -U "$REPO" --limit localhost --ask-become-pass
+# SEM --ask-become-pass: o Ubuntu 26.04 usa o sudo-rs (reescrita em Rust),
+# que não reescreve o prompt do PAM como o sudo original fazia. O Ansible
+# depende disso para saber quando enviar a senha, então become com senha
+# simplesmente não funciona aqui ("Timed out waiting for become success or
+# become password prompt"). A solução é sudo sem senha para o aluno — veja
+# "Problemas comuns" no README, é um comando, uma vez por máquina.
+ansible-pull -U "$REPO" --limit localhost
