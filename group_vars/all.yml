@@ -27,6 +27,14 @@ postgres_metodo_auth: "scram-sha-256"
 postgres_usuario_aluno: "{{ aluno_usuario }}"
 postgres_senha_aluno: "estudante"
 
+# --- VS Code --------------------------------------------------------
+# Extensões instaladas para o aluno. Os IDs são "publisher.nome" — os mesmos
+# que aparecem na URL do marketplace.
+vscode_extensoes_padrao:
+  - ms-python.python              # Python: realce, debug, seleção de venv
+  - mtxr.sqltools                 # cliente SQL dentro do editor
+  - mtxr.sqltools-driver-pg       # driver PostgreSQL do SQLTools
+
 # --- DBeaver --------------------------------------------------------
 # Workspace padrão do DBeaver 21+ (o "workspace6").
 dbeaver_workspace: "{{ aluno_home }}/.local/share/DBeaverData/workspace6"

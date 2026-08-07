@@ -1,0 +1,54 @@
+---
+# Visual Studio Code — instalado pelo repositório apt oficial da Microsoft.
+#
+# Mesma escolha da role dbeaver: repositório em vez de .deb avulso ou snap,
+# para o aluno receber atualizações pelo apt. O repositório publica amd64 e
+# arm64, então funciona em VM x86 e em Mac com Apple Silicon.
+
+- name: Garantir o diretório de chaves do apt
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Baixar a chave de assinatura da Microsoft
+  ansible.builtin.get_url:
+    url: https://packages.microsoft.com/keys/microsoft.asc
+    dest: /etc/apt/keyrings/microsoft.asc
+    mode: "0644"
+
+- name: Adicionar o repositório do VS Code
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/microsoft.asc] https://packages.microsoft.com/repos/code stable main"
+    filename: vscode
+    state: present
+
+- name: Instalar o VS Code
+  ansible.builtin.apt:
+    name: code
+    state: present
+    update_cache: true
+
+# --- Extensões -------------------------------------------------------
+# Extensões são por usuário, então rodam como o aluno — nunca como root, ou
+# iriam parar em /root/.vscode e o aluno não as veria.
+#
+# O "code --install-extension" não é idempotente: reinstalar imprime aviso e
+# marca a task como changed em toda execução. Por isso listamos o que já
+# existe antes e instalamos só o que falta.
+
+- name: Listar as extensões já instaladas
+  ansible.builtin.command: code --list-extensions
+  become: true
+  become_user: "{{ aluno_usuario }}"
+  register: vscode_extensoes
+  changed_when: false
+  failed_when: false
+
+- name: Instalar as extensões que faltam
+  ansible.builtin.command: "code --install-extension {{ item }}"
+  become: true
+  become_user: "{{ aluno_usuario }}"
+  loop: "{{ vscode_extensoes_padrao }}"
+  when: item | lower not in (vscode_extensoes.stdout_lines | map('lower') | list)
+  changed_when: true

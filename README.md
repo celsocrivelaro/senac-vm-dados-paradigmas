@@ -12,6 +12,8 @@ Ativo agora (veja `local.yml`):
   login para o aluno
 - **DBeaver Community** (repositório apt oficial) já com a conexão
   `PostgreSQL local (aula)` criada
+- **VS Code** (repositório apt oficial da Microsoft) com as extensões de
+  Python e SQL listadas em `group_vars/all.yml`
 
 Prontas no repositório, mas **desativadas** (descomente a linha em
 `local.yml` para ligar):
@@ -58,6 +60,7 @@ roles/
   common/              # pacotes base + Lua
   postgresql/          # inclui templates de postgresql.conf e pg_hba.conf
   dbeaver/             # repo apt oficial + data-sources.json do aluno
+  vscode/              # repo apt da Microsoft + extensões do aluno
   python/              # pip, venv, pipx, Scrapy
   airflow/             # venv + serviço systemd
   rust/  prolog/  clojure/
