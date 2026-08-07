@@ -16,7 +16,8 @@ Ativo agora (veja `local.yml`):
   Python e SQL listadas em `group_vars/all.yml`
 - **Google Chrome** (repositório apt oficial do Google)
 - **Apache Airflow 3** (venv dedicado em `/opt/airflow`, como serviço systemd),
-  em <http://localhost:9876>, login `senac`/`senac`
+  em <http://localhost:9876>, login `senac`/`senac` — sem os DAGs de exemplo e
+  com uma única conexão, `postgres_aula`, apontando para o Postgres local
 
 Prontas no repositório, mas **desativadas** (descomente a linha em
 `local.yml` para ligar):

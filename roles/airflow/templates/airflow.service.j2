@@ -13,6 +13,10 @@ Environment=PATH={{ airflow_home }}/venv/bin:/usr/local/sbin:/usr/local/bin:/usr
 Environment=AIRFLOW__API__PORT={{ airflow_porta }}
 Environment=AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS={{ airflow_usuario }}:admin
 Environment=AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORDS_FILE={{ airflow_senhas_arquivo }}
+# Sem os DAGs e assets de exemplo: a interface abre limpa, só com o que a
+# turma criar. (No Airflow 3 não existe mais load_default_connections — as
+# conexões padrão do Airflow 2 deixaram de ser criadas.)
+Environment=AIRFLOW__CORE__LOAD_EXAMPLES=False
 ExecStart={{ airflow_home }}/venv/bin/airflow standalone
 Restart=on-failure
 

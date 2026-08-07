@@ -54,6 +54,12 @@ airflow_senha: "senac"
 # em vez do "...json.generated" padrão, deixando claro que quem manda aqui é
 # o repositório, e não a senha sorteada na primeira execução.
 airflow_senhas_arquivo: "{{ airflow_home }}/simple_auth_manager_passwords.json"
+# Conexão única que aparece na tela de Connections, apontando para o Postgres
+# local com o usuário do aluno.
+airflow_conexao_postgres: "postgres_aula"
+# Marcador de que o banco de metadados já foi limpo dos DAGs de exemplo.
+# Aumente o número se algum dia precisar forçar uma nova limpeza.
+airflow_marcador_limpeza: "{{ airflow_home }}/.limpeza-exemplos-1"
 # A versão do Python precisa bater com a do sistema para o constraints
 # file do Airflow. 26.04 = 3.14; 24.04 = 3.12; 22.04 = 3.10.
 airflow_python: "3.14"

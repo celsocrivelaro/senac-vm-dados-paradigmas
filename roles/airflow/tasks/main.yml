@@ -38,6 +38,47 @@
   environment:
     AIRFLOW_HOME: "{{ airflow_home }}"
 
+- name: Instalar o provider do PostgreSQL no venv do Airflow
+  ansible.builtin.pip:
+    name: apache-airflow-providers-postgres
+    virtualenv: "{{ airflow_home }}/venv"
+    extra_args: >-
+      --constraint
+      https://raw.githubusercontent.com/apache/airflow/constraints-{{ airflow_versao }}/constraints-{{ airflow_python }}.txt
+  become: true
+  become_user: "{{ aluno_usuario }}"
+  environment:
+    AIRFLOW_HOME: "{{ airflow_home }}"
+
+# --- Limpeza dos exemplos --------------------------------------------
+# Desligar load_examples impede o Airflow de carregar os DAGs de exemplo de
+# novo, mas os que já entraram continuam gravados no banco de metadados. Como
+# o banco aqui é SQLite (um arquivo), a forma mais direta de limpar é apagá-lo
+# e deixar o migrate recriá-lo vazio.
+#
+# O marcador garante que isso aconteça UMA vez: sem ele, cada "atualizar"
+# apagaria os DAGs e o histórico de execuções do aluno.
+
+- name: Verificar se a limpeza dos exemplos já foi feita
+  ansible.builtin.stat:
+    path: "{{ airflow_marcador_limpeza }}"
+  register: airflow_limpeza
+
+- name: Apagar o banco de metadados com os exemplos já carregados
+  ansible.builtin.file:
+    path: "{{ airflow_home }}/airflow.db"
+    state: absent
+  when: not airflow_limpeza.stat.exists
+
+- name: Registrar que a limpeza foi feita
+  ansible.builtin.file:
+    path: "{{ airflow_marcador_limpeza }}"
+    state: touch
+    owner: "{{ aluno_usuario }}"
+    group: "{{ aluno_usuario }}"
+    mode: "0644"
+  when: not airflow_limpeza.stat.exists
+
 - name: Inicializar/migrar o banco de metadados do Airflow
   ansible.builtin.command: "{{ airflow_home }}/venv/bin/airflow db migrate"
   become: true
@@ -46,6 +87,38 @@
     AIRFLOW_HOME: "{{ airflow_home }}"
   args:
     creates: "{{ airflow_home }}/airflow.db"   # não roda de novo se já existe
+
+# --- Conexão única com o Postgres ------------------------------------
+# O "connections add" falha se o conn_id já existir, então perguntamos antes.
+
+- name: Verificar se a conexão do Postgres já existe no Airflow
+  ansible.builtin.command: "{{ airflow_home }}/venv/bin/airflow connections get {{ airflow_conexao_postgres }}"
+  register: airflow_conexao
+  changed_when: false
+  failed_when: false
+  become: true
+  become_user: "{{ aluno_usuario }}"
+  environment:
+    AIRFLOW_HOME: "{{ airflow_home }}"
+
+- name: Criar a conexão do Postgres no Airflow
+  ansible.builtin.command:
+    argv:
+      - "{{ airflow_home }}/venv/bin/airflow"
+      - connections
+      - add
+      - "{{ airflow_conexao_postgres }}"
+      - "--conn-type=postgres"
+      - "--conn-host=localhost"
+      - "--conn-port={{ postgres_porta }}"
+      - "--conn-login={{ postgres_usuario_aluno }}"
+      - "--conn-password={{ postgres_senha_aluno }}"
+      - "--conn-schema=postgres"
+  when: airflow_conexao.rc != 0
+  become: true
+  become_user: "{{ aluno_usuario }}"
+  environment:
+    AIRFLOW_HOME: "{{ airflow_home }}"
 
 # O simple auth manager lê este arquivo na subida. Sorteando a senha, cada VM
 # ficaria com uma diferente — aqui ela é fixa e igual para a turma inteira.
