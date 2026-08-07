@@ -41,6 +41,7 @@
     - postgresql   # PostgreSQL + configuração em /etc/postgresql
     - dbeaver      # DBeaver Community + conexão pronta com o Postgres local
     - vscode       # VS Code + extensões de Python e SQL
+    - chrome       # Google Chrome
 
     # --- Desativadas por enquanto ------------------------------------
     # As roles continuam no repositório (roles/), prontas para uso.

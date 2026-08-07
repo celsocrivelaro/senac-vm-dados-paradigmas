@@ -14,6 +14,7 @@ Ativo agora (veja `local.yml`):
   `PostgreSQL local (aula)` criada
 - **VS Code** (repositório apt oficial da Microsoft) com as extensões de
   Python e SQL listadas em `group_vars/all.yml`
+- **Google Chrome** (repositório apt oficial do Google)
 
 Prontas no repositório, mas **desativadas** (descomente a linha em
 `local.yml` para ligar):
@@ -61,6 +62,7 @@ roles/
   postgresql/          # inclui templates de postgresql.conf e pg_hba.conf
   dbeaver/             # repo apt oficial + data-sources.json do aluno
   vscode/              # repo apt da Microsoft + extensões do aluno
+  chrome/              # repo apt do Google
   python/              # pip, venv, pipx, Scrapy
   airflow/             # venv + serviço systemd
   rust/  prolog/  clojure/

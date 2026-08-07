@@ -1,0 +1,34 @@
+---
+# Google Chrome — instalado pelo repositório apt oficial do Google.
+#
+# Mesma abordagem das roles dbeaver e vscode. O repositório publica amd64 e
+# arm64 (o Chrome para Linux em ARM deixou de ser exceção), então funciona
+# nas duas arquiteturas de VM.
+
+- name: Garantir o diretório de chaves do apt
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Baixar a chave de assinatura do Google
+  ansible.builtin.get_url:
+    url: https://dl.google.com/linux/linux_signing_key.pub
+    dest: /etc/apt/keyrings/google-chrome.asc
+    mode: "0644"
+
+# O filename é "google-chrome" de propósito: é exatamente o arquivo que o
+# pacote do Chrome cria sozinho depois de instalado. Usando o mesmo nome, o
+# repositório não acaba declarado duas vezes (o apt avisaria "Target Packages
+# is configured multiple times").
+- name: Adicionar o repositório do Google Chrome
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64,arm64 signed-by=/etc/apt/keyrings/google-chrome.asc] https://dl.google.com/linux/chrome/deb/ stable main"
+    filename: google-chrome
+    state: present
+
+- name: Instalar o Google Chrome
+  ansible.builtin.apt:
+    name: google-chrome-stable
+    state: present
+    update_cache: true
