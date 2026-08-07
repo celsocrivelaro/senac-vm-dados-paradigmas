@@ -1,4 +1,12 @@
 ---
+# A ordem importa: os handlers rodam na ordem em que estão declarados aqui,
+# não na ordem em que foram notificados. O daemon_reload precisa vir antes do
+# restart, senão o systemd reinicia o serviço com a unit antiga.
 - name: recarregar systemd
-  ansible.builtin.systemd:
+  ansible.builtin.systemd_service:
     daemon_reload: true
+
+- name: reiniciar airflow
+  ansible.builtin.systemd_service:
+    name: airflow
+    state: restarted

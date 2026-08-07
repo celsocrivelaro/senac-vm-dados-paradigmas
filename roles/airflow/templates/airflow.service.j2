@@ -5,6 +5,11 @@ After=network.target postgresql.service
 [Service]
 User={{ aluno_usuario }}
 Environment=AIRFLOW_HOME={{ airflow_home }}
+# O "airflow standalone" sobe scheduler, api-server, dag-processor e triggerer
+# com subprocess.Popen(["airflow", ...]) — ou seja, procurando no PATH. O PATH
+# padrão do systemd não inclui o venv, então os quatro morrem com "No such
+# file or directory" enquanto o processo pai continua de pé.
+Environment=PATH={{ airflow_home }}/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ExecStart={{ airflow_home }}/venv/bin/airflow standalone
 Restart=on-failure
 

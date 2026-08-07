@@ -52,7 +52,9 @@
     src: airflow.service.j2
     dest: /etc/systemd/system/airflow.service
     mode: "0644"
-  notify: recarregar systemd
+  notify:
+    - recarregar systemd
+    - reiniciar airflow
 
 - name: Habilitar e iniciar o Airflow
   ansible.builtin.service:
