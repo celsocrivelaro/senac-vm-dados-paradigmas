@@ -35,6 +35,13 @@ vscode_extensoes_padrao:
   - mtxr.sqltools                 # cliente SQL dentro do editor
   - mtxr.sqltools-driver-pg       # driver PostgreSQL do SQLTools
 
+# --- Metabase -------------------------------------------------------
+# A versão vai no nome do JAR baixado; trocar aqui baixa a nova e reinicia o
+# serviço. Versões em https://www.metabase.com/changelog
+metabase_versao: "v0.63.5"
+metabase_home: "/opt/metabase"
+metabase_porta: 4444
+
 # --- DBeaver --------------------------------------------------------
 # Workspace padrão do DBeaver 21+ (o "workspace6").
 dbeaver_workspace: "{{ aluno_home }}/.local/share/DBeaverData/workspace6"

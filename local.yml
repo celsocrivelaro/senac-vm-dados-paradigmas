@@ -43,6 +43,7 @@
     - vscode       # VS Code + extensões de Python e SQL
     - chrome       # Google Chrome
     - airflow      # Apache Airflow 3 (venv dedicado em /opt/airflow)
+    - metabase     # Metabase (JAR + systemd, banco interno em H2)
 
     # --- Desativadas por enquanto ------------------------------------
     # As roles continuam no repositório (roles/), prontas para uso.

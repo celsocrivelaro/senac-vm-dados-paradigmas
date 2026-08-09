@@ -18,6 +18,9 @@ Ativo agora (veja `local.yml`):
 - **Apache Airflow 3** (venv dedicado em `/opt/airflow`, como serviço systemd),
   em <http://localhost:9876>, login `senac`/`senac` — sem os DAGs de exemplo e
   com uma única conexão, `postgres_aula`, apontando para o Postgres local
+- **Metabase** em <http://localhost:4444> (JAR + systemd, Java 25). No primeiro
+  acesso o aluno cria a conta de admin pelo assistente — não dá para
+  pré-configurar isso, o Metabase exige o passo interativo.
 
 Prontas no repositório, mas **desativadas** (descomente a linha em
 `local.yml` para ligar):

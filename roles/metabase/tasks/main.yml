@@ -1,0 +1,48 @@
+---
+# Metabase — ferramenta de BI, roda como um JAR sobre a JVM.
+#
+# Não existe repositório apt oficial: a forma indicada pela própria Metabase é
+# baixar o JAR e rodá-lo como serviço. O JAR é versionado no nome do arquivo,
+# então trocar metabase_versao baixa o novo e o systemd reinicia sozinho.
+
+# A doc pede o JRE 25 da Eclipse Temurin. Usamos o OpenJDK 25 do próprio
+# Ubuntu, que roda o mesmo JAR e evita mais um repositório de terceiro na VM.
+- name: Instalar o Java 25 (JRE)
+  ansible.builtin.apt:
+    name: openjdk-25-jre-headless
+    state: present
+    update_cache: true
+
+- name: Criar o diretório do Metabase
+  ansible.builtin.file:
+    path: "{{ metabase_home }}"
+    state: directory
+    owner: "{{ aluno_usuario }}"
+    group: "{{ aluno_usuario }}"
+    mode: "0755"
+
+# A versão vai no nome do arquivo de propósito: assim o get_url não rebaixa
+# centenas de MB a cada execução, e uma troca de versão vira um download novo
+# mais a mudança do ExecStart — que o handler transforma em restart.
+- name: Baixar o JAR do Metabase
+  ansible.builtin.get_url:
+    url: "https://downloads.metabase.com/{{ metabase_versao }}/metabase.jar"
+    dest: "{{ metabase_home }}/metabase-{{ metabase_versao }}.jar"
+    owner: "{{ aluno_usuario }}"
+    group: "{{ aluno_usuario }}"
+    mode: "0644"
+
+- name: Instalar o serviço systemd do Metabase
+  ansible.builtin.template:
+    src: metabase.service.j2
+    dest: /etc/systemd/system/metabase.service
+    mode: "0644"
+  notify:
+    - recarregar systemd
+    - reiniciar metabase
+
+- name: Habilitar e iniciar o Metabase
+  ansible.builtin.service:
+    name: metabase
+    state: started
+    enabled: true

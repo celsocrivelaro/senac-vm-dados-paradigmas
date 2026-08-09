@@ -1,0 +1,18 @@
+[Unit]
+Description=Metabase - VM de aula
+After=network.target postgresql.service
+
+[Service]
+User={{ aluno_usuario }}
+WorkingDirectory={{ metabase_home }}
+Environment=MB_JETTY_PORT={{ metabase_porta }}
+# Banco interno do Metabase (dashboards, perguntas, usuários) — não confundir
+# com o Postgres que a turma vai consultar. O H2 acrescenta ".mv.db" sozinho,
+# então o caminho aqui vai sem extensão.
+Environment=MB_DB_TYPE=h2
+Environment=MB_DB_FILE={{ metabase_home }}/metabase
+ExecStart=/usr/bin/java -jar {{ metabase_home }}/metabase-{{ metabase_versao }}.jar
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
