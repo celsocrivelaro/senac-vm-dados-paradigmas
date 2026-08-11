@@ -25,6 +25,29 @@
     group: "{{ aluno_usuario }}"
     mode: "0755"
 
+# Com airflow_python vindo do sistema, uma distro nova pode trazer um Python
+# para o qual esta versão do Airflow não publicou constraints. Sem esta
+# checagem o sintoma seria um 404 no meio de um pip de vários minutos — foi
+# exatamente o que aconteceu com o Airflow 2.10.4 no Python 3.14.
+- name: Conferir se o Airflow publica constraints para este Python
+  ansible.builtin.uri:
+    url: "https://raw.githubusercontent.com/apache/airflow/constraints-{{ airflow_versao }}/constraints-{{ airflow_python }}.txt"
+    method: HEAD
+  register: airflow_constraints
+  failed_when: false
+  changed_when: false
+
+- name: Falhar com mensagem clara se não houver constraints
+  ansible.builtin.fail:
+    msg: >-
+      O Airflow {{ airflow_versao }} não publica constraints para o Python
+      {{ airflow_python }} (HTTP {{ airflow_constraints.status }}), ou seja,
+      não suporta esta versão. Escolha um airflow_versao compatível em
+      group_vars/all.yml — as versões disponíveis aparecem como
+      constraints-<python>.txt no branch constraints-{{ airflow_versao }} do
+      repositório do Airflow.
+  when: airflow_constraints.status != 200
+
 - name: Criar o virtualenv e instalar o Airflow (com constraints)
   ansible.builtin.pip:
     name: "apache-airflow=={{ airflow_versao }}"

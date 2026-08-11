@@ -1,17 +1,47 @@
 ---
 # Instala o PostgreSQL do repositório do Ubuntu e ajusta a config em /etc.
 
+# Metapacotes "postgresql"/"postgresql-client" em vez de "postgresql-18": cada
+# distro aponta para a versão que ela empacota (18 no Ubuntu 26.04, 17 no
+# Debian 13), então o mesmo repositório serve as duas sem número cravado.
 - name: Instalar PostgreSQL e a biblioteca Python (para os módulos community.postgresql)
   ansible.builtin.apt:
     name:
-      - "postgresql-{{ postgres_versao }}"
-      - "postgresql-client-{{ postgres_versao }}"
+      - postgresql
+      - postgresql-client
       - python3-psycopg2
       # acl: necessário para o Ansible trocar de root para o usuário postgres
       # sem esbarrar em "Failed to set permissions on the temporary files".
       - acl
     state: present
     update_cache: true
+
+# --- Descobrir a versão instalada ------------------------------------
+# O pacote cria /etc/postgresql/<versao>/main. Ler o nome desse diretório é
+# mais confiável que deduzir a versão da distro, e é o mesmo caminho que os
+# templates abaixo precisam montar.
+
+- name: Descobrir a versão do PostgreSQL instalada
+  ansible.builtin.find:
+    paths: /etc/postgresql
+    file_type: directory
+    depth: 1
+  register: postgres_diretorios
+
+- name: Falhar com mensagem clara se nenhum cluster foi encontrado
+  ansible.builtin.fail:
+    msg: >-
+      Não encontrei nenhum diretório de versão em /etc/postgresql. O pacote
+      "postgresql" instalou? Rode "apt policy postgresql" para conferir. Se
+      precisar apontar a versão na mão, use "-e postgres_versao=17".
+  when: postgres_diretorios.files | length == 0
+
+# O max cobre a máquina com mais de um cluster instalado (ex.: depois de um
+# upgrade em que a versão antiga ficou para trás).
+- name: Guardar a versão encontrada
+  ansible.builtin.set_fact:
+    postgres_versao: "{{ postgres_diretorios.files | map(attribute='path') | map('basename') | map('int') | max }}"
+  when: postgres_versao is not defined
 
 - name: Garantir que o serviço está ativo e habilitado no boot
   ansible.builtin.service:

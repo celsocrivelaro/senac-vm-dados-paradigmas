@@ -13,9 +13,11 @@ aluno_usuario: "{{ lookup('env', 'SUDO_USER') | default(ansible_user_id, true) }
 aluno_home: "{{ ('~' ~ aluno_usuario) | expanduser }}"
 
 # --- PostgreSQL ---------------------------------------------------
-# A versão define o caminho dos configs: /etc/postgresql/<versao>/main
-# Precisa ser a que o Ubuntu empacota: 26.04 → 18; 24.04 → 16; 22.04 → 14.
-postgres_versao: "18"
+# postgres_versao NÃO é definida aqui de propósito. Ela define o caminho dos
+# configs (/etc/postgresql/<versao>/main) e muda a cada distro — 18 no Ubuntu
+# 26.04, 17 no Debian 13, 16 no Ubuntu 24.04. Fixar o número aqui já quebrou
+# uma vez, então a role postgresql instala o metapacote e descobre a versão da
+# própria máquina. Para forçar um valor: ansible-pull ... -e postgres_versao=17
 postgres_porta: 5432
 # "md5" ou "scram-sha-256". scram é o padrão moderno recomendado.
 postgres_metodo_auth: "scram-sha-256"
@@ -67,9 +69,12 @@ airflow_conexao_postgres: "postgres_aula"
 # Marcador de que o banco de metadados já foi limpo dos DAGs de exemplo.
 # Aumente o número se algum dia precisar forçar uma nova limpeza.
 airflow_marcador_limpeza: "{{ airflow_home }}/.limpeza-exemplos-1"
-# A versão do Python precisa bater com a do sistema para o constraints
-# file do Airflow. 26.04 = 3.14; 24.04 = 3.12; 22.04 = 3.10.
-airflow_python: "3.14"
+# A versão do Python precisa bater com a do sistema, senão o "python3.X -m
+# venv" não existe e o constraints file do Airflow não é encontrado. Em vez de
+# cravar o número (3.14 no Ubuntu 26.04, 3.13 no Debian 13, 3.12 no 24.04),
+# derivamos do interpretador que o próprio Ansible está usando — que é o
+# python3 do sistema, exatamente o que vai receber o venv.
+airflow_python: "{{ ansible_facts.python.version.major }}.{{ ansible_facts.python.version.minor }}"
 
 # --- Clojure ------------------------------------------------------
 clojure_versao: "1.12.0.1495"

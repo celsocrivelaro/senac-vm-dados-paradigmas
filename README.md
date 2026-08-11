@@ -1,8 +1,12 @@
 # VM de Aula — configuração via Ansible (modelo pull)
 
-Este repositório configura uma VM Ubuntu para as aulas: instala aplicações,
-ajusta arquivos em `/etc` e mantém tudo versionado. O aluno roda **um comando**
-para receber as atualizações que você publica aqui.
+Este repositório configura uma VM para as aulas: instala aplicações, ajusta
+arquivos em `/etc` e mantém tudo versionado. O aluno roda **um comando** para
+receber as atualizações que você publica aqui.
+
+Testado no **Ubuntu 26.04** (Lubuntu) e no **Debian 13** (trixie). As versões
+que mudam entre as duas — PostgreSQL e Python — são descobertas em tempo de
+execução, então não há variável para editar ao trocar de distribuição.
 
 ## O que é instalado
 
@@ -14,6 +18,10 @@ Ativo agora (veja `local.yml`):
   `PostgreSQL local (aula)` criada
 - **VS Code** (repositório apt oficial da Microsoft) com as extensões de
   Python e SQL listadas em `group_vars/all.yml`
+
+Prontas no repositório, mas **desativadas** (descomente a linha em
+`local.yml` para ligar):
+
 - **Google Chrome** (repositório apt oficial do Google)
 - **Apache Airflow 3** (venv dedicado em `/opt/airflow`, como serviço systemd),
   em <http://localhost:9876>, login `senac`/`senac` — sem os DAGs de exemplo e
@@ -21,10 +29,6 @@ Ativo agora (veja `local.yml`):
 - **Metabase** em <http://localhost:4444> (JAR + systemd, Java 25). No primeiro
   acesso o aluno cria a conta de admin pelo assistente — não dá para
   pré-configurar isso, o Metabase exige o passo interativo.
-
-Prontas no repositório, mas **desativadas** (descomente a linha em
-`local.yml` para ligar):
-
 - **Python 3**, pip, venv, pipx e **Scrapy**
 - **Lua 5.4** + `liblua5.4-dev` (role `common`, junto dos pacotes base)
 - **Rustup** (toolchain stable, no home do aluno)
@@ -49,7 +53,9 @@ sudo ansible-pull -U https://github.com/celsocrivelaro/senac-vm.git --limit loca
 
 O `sudo` na frente é proposital: no Ubuntu 26.04 o Ansible não consegue
 enviar a senha do sudo por conta própria (veja "Problemas comuns"), então o
-playbook roda já como root e é o sudo que pede a senha, no prompt dele.
+playbook roda já como root e é o sudo que pede a senha, no prompt dele. No
+Debian 13 o `--ask-become-pass` funcionaria, mas rodar com `sudo` também
+funciona — vale o mesmo comando nas duas distribuições.
 
 > `--limit localhost` evita o aviso `Could not match supplied host pattern`:
 > por padrão o `ansible-pull` limita a execução ao *hostname* da máquina, que
@@ -90,6 +96,10 @@ sudo ansible-playbook local.yml
 **`Timed out waiting for become success or become password prompt`**
 (e o sudo mostrando `[sudo: [sudo via ansible, key=...] password:] Senha:`)
 
+> Isto é **específico do Ubuntu 26.04**. O Debian 13 continua com o sudo
+> original (GNU sudo 1.9.16) — o `sudo-rs` existe no repositório, mas não é o
+> provedor padrão —, então nada desta seção se aplica lá.
+
 O Ubuntu 26.04 substituiu o sudo original pelo **sudo-rs** (reescrita em
 Rust). O sudo original capturava o prompt de senha do PAM e o reescrevia com
 o que o Ansible passa em `-p`; o Ansible depende exatamente disso para saber
@@ -117,10 +127,10 @@ pipx e afins caiam no home do aluno, e não em `/root`.
 - Drop-in `NOPASSWD` em `/etc/sudoers.d/` — funciona em teoria, mas é
   arriscado: **um erro de sintaxe ali derruba o sudo da máquina inteira**, e o
   sudo-rs falha fechado. Se isso acontecer, o sudo não serve nem para
-  desfazer; recupere com `pkexec rm /etc/sudoers.d/<arquivo>` ou pelo modo de
-  recuperação do GRUB (root shell → `mount -o remount,rw /` → apague o
-  arquivo). Se for mexer nesse diretório, use sempre `sudo visudo -f`, que
-  valida antes de salvar.
+  desfazer; recupere com `pkexec rm /etc/sudoers.d/<arquivo>` (precisa de um
+  agente do polkit no ambiente gráfico) ou pelo modo de recuperação do GRUB
+  (root shell → `mount -o remount,rw /` → apague o arquivo). Se for mexer
+  nesse diretório, use sempre `sudo visudo -f`, que valida antes de salvar.
 
 Alternativa, se você quiser o `--ask-become-pass` de volta: reinstalar o sudo
 original (`sudo apt install sudo`, que remove o sudo-rs). Funciona, mas foge
@@ -130,12 +140,11 @@ do padrão da distribuição — o Ubuntu 26.10 pretende deixar o sudo-rs como
 **`E:Release file ... is not valid yet (invalid for another 1d 5h ...)`**
 
 O relógio da VM está atrasado. O apt compara a data do arquivo `Release` com
-a hora local; se a VM acha que ainda é anteontem, o índice do Ubuntu parece
-"do futuro" e é recusado — nenhum pacote instala. Acontece com VM que ficou
-suspensa ou voltou de snapshot.
+a hora local; se a VM acha que ainda é anteontem, o índice da distribuição
+parece "do futuro" e é recusado — nenhum pacote instala. Acontece com VM que
+ficou suspensa ou voltou de snapshot.
 
-O `local.yml` já tenta corrigir sozinho (`pre_tasks` liga o NTP e espera a
-sincronização). Se mesmo assim falhar, acerte à mão:
+O playbook não mexe no relógio; acerte antes de rodar:
 
 ```bash
 sudo timedatectl set-ntp false
@@ -151,18 +160,20 @@ Use `--limit localhost` (já está no `update.sh`) para não aparecer.
 
 ## Observações honestas
 
-- **Airflow**: a versão do Python em `group_vars/all.yml` (`airflow_python`)
-  precisa bater com a do Ubuntu (26.04 → 3.14; 24.04 → 3.12; 22.04 → 3.10),
-  senão o *constraints file* não é encontrado (erro 404 no pip). Atenção:
-  Python 3.14 só é suportado a partir do **Airflow 3.2.0** — por isso este
-  repositório usa o 3.3.0, e não mais o 2.10.4.
+- **Airflow**: `airflow_python` é derivado do Python do sistema, não escrito à
+  mão — a role confere se o Airflow publica *constraints* para aquela versão e
+  falha em segundos com mensagem clara se não publicar, em vez de estourar um
+  404 no meio de um `pip` de vários minutos. Atenção: Python 3.14 só é
+  suportado a partir do **Airflow 3.2.0** — por isso este repositório usa o
+  3.3.0, e não mais o 2.10.4.
   O login da interface web é fixado pelo repositório (`airflow_usuario` e
   `airflow_senha`, padrão `senac`/`senac`), gravado em
   `/opt/airflow/simple_auth_manager_passwords.json`. Sem isso o Airflow 3
   sortearia uma senha diferente em cada VM e nem a mostraria no log.
-- **Postgres**: a `postgres_versao` deve corresponder ao que o Ubuntu instala
-  (26.04 → 18; 24.04 → 16; 22.04 → 14). Se não bater, o pacote
-  `postgresql-<versao>` não existe nos repositórios e o apt falha.
+- **Postgres**: a role instala o metapacote `postgresql` e **descobre** a versão
+  lendo o diretório criado em `/etc/postgresql`, em vez de ter o número no
+  `group_vars`. É o que permite o mesmo repositório servir Ubuntu 26.04 (18) e
+  Debian 13 (17) sem editar nada. Para forçar: `-e postgres_versao=17`.
 - **DBeaver**: a conexão vem pronta, mas **sem a senha salva** — o aluno digita
   na primeira vez (usuário e senha em `group_vars/all.yml`, padrão
   `estudante`/`estudante`) e marca "salvar" se quiser. O DBeaver guarda senha
