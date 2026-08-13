@@ -16,6 +16,7 @@
     - dbeaver      # DBeaver Community + conexão pronta com o Postgres local
     - vscode       # VS Code + extensões de Python e SQL
     - docker       # Docker Engine + Compose, com o aluno no grupo docker
+    - python       # pacotes do Python listados em python_pacotes
 
     # --- Desativadas por enquanto ------------------------------------
     # As roles continuam no repositório (roles/), prontas para uso.

@@ -18,6 +18,9 @@ Ativo agora (veja `local.yml`):
   Python e SQL listadas em `group_vars/all.yml`
 - **Docker Engine** + CLI, buildx e Compose v2 (repositório apt oficial da
   Docker), com o aluno já no grupo `docker`
+- **Python**: os pacotes listados em `python_pacotes` (`python3-pip` e
+  `python3-venv`). `pipx` e `Scrapy` são extras da mesma role, ligados por
+  `python_instalar_pipx` e `python_instalar_scrapy`
 
 > Com a role `postgresql` desativada, a conexão que o DBeaver traz pronta
 > aponta para um Postgres que não existe na máquina. Ela continua válida se o
@@ -39,7 +42,6 @@ Prontas no repositório, mas **desativadas** (descomente a linha em
 - **Metabase** em <http://localhost:4444> (JAR + systemd, Java 25). No primeiro
   acesso o aluno cria a conta de admin pelo assistente — não dá para
   pré-configurar isso, o Metabase exige o passo interativo.
-- **Python 3**, pip, venv, pipx e **Scrapy**
 - **Lua 5.4** + `liblua5.4-dev` (role `common`, junto dos pacotes base)
 - **Rustup** (toolchain stable, no home do aluno)
 - **SWI-Prolog**

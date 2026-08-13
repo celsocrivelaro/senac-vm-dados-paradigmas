@@ -1,26 +1,29 @@
 ---
-# Python 3, ferramentas de ambiente e Scrapy.
+# Pacotes do Python vindos do apt.
 #
-# NOTA sobre o Ubuntu 24.04+ (PEP 668): o sistema bloqueia "pip install"
-# global para não quebrar pacotes do SO. Por isso instalamos o Scrapy
-# pelo apt (python3-scrapy), que é a forma limpa. Para libs sem pacote
-# apt, o recomendado é venv (por projeto) ou pipx (ferramentas de CLI).
+# A lista fica em "python_pacotes" (group_vars/all.yml) para a turma receber só
+# o que a aula pede. Scrapy e pipx são extras, cada um atrás da sua flag.
+#
+# NOTA sobre o PEP 668: desde o Ubuntu 24.04 e o Debian 12 o sistema bloqueia
+# "pip install" global para não quebrar pacotes do SO. O caminho recomendado é
+# venv (por projeto) ou pipx (ferramentas de CLI) — daí o python3-venv na lista
+# padrão. Para forçar instalação global, "pip install --break-system-packages".
 
-- name: Instalar Python 3, pip, venv e pipx
+- name: Instalar os pacotes do Python
   ansible.builtin.apt:
-    name:
-      - python3
-      - python3-pip
-      - python3-venv
-      - python3-full
-      - pipx
+    name: "{{ python_pacotes }}"
     state: present
     update_cache: true
 
-- name: Instalar Scrapy (pacote do Ubuntu)
+- name: Instalar o pipx
   ansible.builtin.apt:
-    name: python3-scrapy
+    name:
+      - pipx
+      # acl: a tarefa seguinte troca de root para o aluno, e sem o setfacl o
+      # Ansible falha em "Failed to set permissions on the temporary files".
+      - acl
     state: present
+  when: python_instalar_pipx
 
 # pipx precisa que o diretório de binários esteja no PATH do aluno.
 - name: Garantir o PATH do pipx para o aluno
@@ -28,3 +31,10 @@
   become: true
   become_user: "{{ aluno_usuario }}"
   changed_when: false
+  when: python_instalar_pipx
+
+- name: Instalar o Scrapy (pacote da distribuição)
+  ansible.builtin.apt:
+    name: python3-scrapy
+    state: present
+  when: python_instalar_scrapy

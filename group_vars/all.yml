@@ -37,6 +37,18 @@ vscode_extensoes_padrao:
   - mtxr.sqltools                 # cliente SQL dentro do editor
   - mtxr.sqltools-driver-pg       # driver PostgreSQL do SQLTools
 
+# --- Python ---------------------------------------------------------
+# Pacotes do apt instalados pela role python. Acrescente à lista conforme a
+# aula precisar (python3-full, python3-dev, ...).
+python_pacotes:
+  - python3-pip
+  - python3-venv
+
+# Extras da role, desligados por padrão. O pipx serve para instalar ferramentas
+# de linha de comando sem esbarrar no PEP 668.
+python_instalar_pipx: false
+python_instalar_scrapy: false
+
 # --- Docker ---------------------------------------------------------
 # O repositório da Docker é separado por distribuição: "ubuntu" ou "debian" na
 # URL. ansible_distribution devolve "Ubuntu"/"Debian" — daí o lower.
