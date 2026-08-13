@@ -25,7 +25,12 @@
 
 - name: Instalar o VS Code
   ansible.builtin.apt:
-    name: code
+    name:
+      - code
+      # acl: as tarefas de extensão abaixo trocam de root para o aluno, e sem
+      # o setfacl o Ansible falha em "Failed to set permissions on the
+      # temporary files". A role não depende de outra estar ativa para isso.
+      - acl
     state: present
     update_cache: true
 

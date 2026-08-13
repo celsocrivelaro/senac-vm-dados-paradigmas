@@ -37,6 +37,17 @@ vscode_extensoes_padrao:
   - mtxr.sqltools                 # cliente SQL dentro do editor
   - mtxr.sqltools-driver-pg       # driver PostgreSQL do SQLTools
 
+# --- Docker ---------------------------------------------------------
+# O repositório da Docker é separado por distribuição: "ubuntu" ou "debian" na
+# URL. ansible_distribution devolve "Ubuntu"/"Debian" — daí o lower.
+docker_distro: "{{ ansible_facts.distribution | lower }}"
+docker_pacotes:
+  - docker-ce                # o daemon
+  - docker-ce-cli            # o comando docker
+  - containerd.io            # runtime de container
+  - docker-buildx-plugin     # docker build moderno
+  - docker-compose-plugin    # docker compose (v2, como subcomando)
+
 # --- Metabase -------------------------------------------------------
 # A versão vai no nome do JAR baixado; trocar aqui baixa a nova e reinicia o
 # serviço. Versões em https://www.metabase.com/changelog

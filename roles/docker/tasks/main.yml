@@ -1,0 +1,59 @@
+---
+# Docker Engine — instalado pelo repositório apt oficial da Docker.
+#
+# Diferente das roles dbeaver/vscode/chrome, o repositório da Docker é separado
+# por distribuição E por release: a URL leva "ubuntu" ou "debian", e a suite é o
+# codinome da versão. Os dois vêm dos fatos do Ansible, então a mesma role
+# funciona no Ubuntu 26.04 (resolute) e no Debian 13 (trixie) sem editar nada.
+#
+# Preferido ao pacote docker.io da distribuição por ser bem mais atual
+# (29.x contra 26.x) e por trazer o plugin do Compose junto.
+
+- name: Garantir o diretório de chaves do apt
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Baixar a chave de assinatura da Docker
+  ansible.builtin.get_url:
+    url: "https://download.docker.com/linux/{{ docker_distro }}/gpg"
+    dest: /etc/apt/keyrings/docker.asc
+    mode: "0644"
+
+# Sem "arch=" de propósito: o nome que o apt usa (amd64/arm64) não é o que o
+# fato ansible_architecture devolve (x86_64/aarch64), e traduzir errado
+# quebraria a instalação. Sem a opção, o apt usa a arquitetura nativa — e o
+# repositório publica amd64, arm64 e mais três.
+- name: Adicionar o repositório da Docker
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [signed-by=/etc/apt/keyrings/docker.asc]
+      https://download.docker.com/linux/{{ docker_distro }}
+      {{ ansible_facts.distribution_release }} stable
+    filename: docker
+    state: present
+
+- name: Instalar o Docker Engine, a CLI e os plugins
+  ansible.builtin.apt:
+    name: "{{ docker_pacotes }}"
+    state: present
+    update_cache: true
+
+- name: Habilitar e iniciar o Docker
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+# Sem isto o aluno precisa de sudo em todo comando docker. O grupo é criado
+# pelo pacote docker-ce, então esta tarefa vem depois da instalação.
+#
+# Vale saber: pertencer ao grupo docker equivale a ter root na máquina, porque
+# dá para montar o sistema de arquivos do host dentro de um container. Numa VM
+# de aula onde o aluno já tem sudo completo, não muda nada na prática.
+- name: Colocar o aluno no grupo docker
+  ansible.builtin.user:
+    name: "{{ aluno_usuario }}"
+    groups: docker
+    append: true

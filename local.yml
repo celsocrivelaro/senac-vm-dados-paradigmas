@@ -13,13 +13,14 @@
   become: true          # roda as tarefas com sudo por padrão
 
   roles:
-    - postgresql   # PostgreSQL + configuração em /etc/postgresql
     - dbeaver      # DBeaver Community + conexão pronta com o Postgres local
     - vscode       # VS Code + extensões de Python e SQL
+    - docker       # Docker Engine + Compose, com o aluno no grupo docker
 
     # --- Desativadas por enquanto ------------------------------------
     # As roles continuam no repositório (roles/), prontas para uso.
     # Para ativar um componente, basta descomentar a linha.
+    # - postgresql # PostgreSQL + configuração em /etc/postgresql
     # - chrome     # Google Chrome
     # - airflow    # Apache Airflow 3 (venv dedicado em /opt/airflow)
     # - metabase   # Metabase (JAR + systemd, banco interno em H2)

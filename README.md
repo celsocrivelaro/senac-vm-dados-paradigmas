@@ -12,15 +12,25 @@ execução, então não há variável para editar ao trocar de distribuição.
 
 Ativo agora (veja `local.yml`):
 
-- **PostgreSQL** (com config versionada em `/etc/postgresql`) + uma role de
-  login para o aluno
 - **DBeaver Community** (repositório apt oficial) já com a conexão
   `PostgreSQL local (aula)` criada
 - **VS Code** (repositório apt oficial da Microsoft) com as extensões de
   Python e SQL listadas em `group_vars/all.yml`
+- **Docker Engine** + CLI, buildx e Compose v2 (repositório apt oficial da
+  Docker), com o aluno já no grupo `docker`
+
+> Com a role `postgresql` desativada, a conexão que o DBeaver traz pronta
+> aponta para um Postgres que não existe na máquina. Ela continua válida se o
+> banco subir num container publicando a porta 5432 — só lembre de casar
+> usuário e senha com os do container (`postgres_usuario_aluno` e
+> `postgres_senha_aluno` em `group_vars/all.yml`, padrão
+> `estudante`/`estudante`).
 
 Prontas no repositório, mas **desativadas** (descomente a linha em
 `local.yml` para ligar):
+
+- **PostgreSQL** (com config versionada em `/etc/postgresql`) + uma role de
+  login para o aluno
 
 - **Google Chrome** (repositório apt oficial do Google)
 - **Apache Airflow 3** (venv dedicado em `/opt/airflow`, como serviço systemd),
@@ -72,6 +82,7 @@ roles/
   common/              # pacotes base + Lua
   postgresql/          # inclui templates de postgresql.conf e pg_hba.conf
   dbeaver/             # repo apt oficial + data-sources.json do aluno
+  docker/              # repo apt da Docker (URL e suite vindas dos fatos)
   vscode/              # repo apt da Microsoft + extensões do aluno
   chrome/              # repo apt do Google
   python/              # pip, venv, pipx, Scrapy
@@ -174,6 +185,11 @@ Use `--limit localhost` (já está no `update.sh`) para não aparecer.
   lendo o diretório criado em `/etc/postgresql`, em vez de ter o número no
   `group_vars`. É o que permite o mesmo repositório servir Ubuntu 26.04 (18) e
   Debian 13 (17) sem editar nada. Para forçar: `-e postgres_versao=17`.
+- **Docker**: entrar no grupo `docker` só vale a partir do próximo login — na
+  sessão atual, `docker ps` ainda vai pedir sudo. `newgrp docker` resolve sem
+  reiniciar. Vale saber que pertencer a esse grupo equivale a ter root na
+  máquina (dá para montar o disco do host num container); numa VM de aula onde
+  o aluno já tem sudo completo, não muda nada na prática.
 - **DBeaver**: a conexão vem pronta, mas **sem a senha salva** — o aluno digita
   na primeira vez (usuário e senha em `group_vars/all.yml`, padrão
   `estudante`/`estudante`) e marca "salvar" se quiser. O DBeaver guarda senha
