@@ -15,6 +15,12 @@ Ativo agora (veja `local.yml`):
 - **PostgreSQL** (a versão empacotada pela distribuição) com a config
   versionada em `/etc/postgresql` e a role de login do aluno já criada
   (`estudante`/`estudante`, ajustável em `group_vars/all.yml`)
+- **MongoDB Community** 8.0 (tarball oficial em `/opt/mongodb`,
+  como serviço systemd) em `mongodb://localhost:27017`, sem autenticação e
+  escutando só o localhost, mais o **mongosh** no PATH
+- **MongoDB Compass** (`.deb` oficial) — a tela de conexão já abre sugerindo
+  `mongodb://localhost:27017`, que é exatamente o banco local. **Só em amd64**:
+  a MongoDB não publica build arm64 do Compass para Linux
 - **DBeaver Community** (repositório apt oficial) já com a conexão
   `PostgreSQL local (aula)` criada
 - **VS Code** (repositório apt oficial da Microsoft) com as extensões de
@@ -85,6 +91,7 @@ roles/
   docker/              # repo apt da Docker (URL e suite vindas dos fatos)
   vscode/              # repo apt da Microsoft + extensões do aluno
   python/              # pip, venv, pipx, Scrapy
+  mongodb/             # tarball + systemd, mongosh e o .deb do Compass
   metabase/            # JAR + serviço systemd + setup pela API
   airflow/             # venv + serviço systemd
   rust/  prolog/  clojure/
@@ -185,6 +192,20 @@ Use `--limit localhost` (já está no `update.sh`) para não aparecer.
   lendo o diretório criado em `/etc/postgresql`, em vez de ter o número no
   `group_vars`. É o que permite o mesmo repositório servir Ubuntu 26.04 (18) e
   Debian 13 (17) sem editar nada. Para forçar: `-e postgres_versao=17`.
+- **MongoDB**: única role que não usa repositório apt, por falta de opção. A
+  MongoDB ainda não publica o servidor para Ubuntu 26.04 nem para Debian 13
+  (os repositórios existem, mas só trazem `mongodb-database-tools` e o
+  `mongosh`), e nenhuma das duas distribuições empacota o MongoDB desde a
+  mudança de licença para SSPL. Então vem do tarball oficial em `/opt/mongodb`,
+  com unit própria — o mesmo padrão da role `metabase`. Usamos o build de
+  Ubuntu 24.04 nas duas distribuições: ele só precisa de `libssl.so.3` e
+  `libcurl.so.4` em tempo de execução, e é o único alvo com `aarch64` (o de
+  Debian 12 sai só em x86_64). Quando a MongoDB publicar para `resolute` e
+  `trixie`, dá para simplificar a role para um `apt` comum — confira em
+  <https://repo.mongodb.org/apt/ubuntu/dists/>.
+- **MongoDB Compass**: só existe `.deb` **amd64**; não há build arm64 para
+  Linux. Numa VM ARM a role avisa e segue, sem derrubar o playbook — o aluno
+  usa o `mongosh`, que tem as duas arquiteturas.
 - **Docker**: entrar no grupo `docker` só vale a partir do próximo login — na
   sessão atual, `docker ps` ainda vai pedir sudo. `newgrp docker` resolve sem
   reiniciar. Vale saber que pertencer a esse grupo equivale a ter root na

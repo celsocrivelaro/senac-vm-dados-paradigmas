@@ -20,6 +20,7 @@
     - vscode       # VS Code + extensões de Python e SQL
     - docker       # Docker Engine + Compose, com o aluno no grupo docker
     - python       # pacotes do Python listados em python_pacotes
+    - mongodb      # MongoDB + mongosh (tarball + systemd) e o Compass
     - metabase     # Metabase (JAR + systemd), já conectado ao Postgres local
 
     # --- Desativadas por enquanto ------------------------------------

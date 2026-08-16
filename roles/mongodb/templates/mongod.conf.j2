@@ -1,0 +1,21 @@
+# Gerado pelo Ansible — editar no repositório, não na máquina.
+# Formato oficial do mongod (YAML):
+# https://www.mongodb.com/docs/manual/reference/configuration-options/
+
+storage:
+  dbPath: {{ mongodb_dados }}
+
+systemLog:
+  destination: file
+  path: {{ mongodb_log }}/mongod.log
+  logAppend: true
+
+net:
+  port: {{ mongodb_porta }}
+  # Só localhost, como vem de fábrica no MongoDB. Sem autenticação: é VM de
+  # aula e o banco não escuta a rede, então o Compass e o mongosh conectam em
+  # mongodb://localhost:{{ mongodb_porta }} sem usuário nem senha — a mesma URL
+  # que o Compass já sugere sozinho na tela de conexão.
+  # Para expor na rede local, troque por 0.0.0.0 e ligue a autenticação
+  # (security.authorization) na mesma edição.
+  bindIp: 127.0.0.1

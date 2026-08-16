@@ -1,0 +1,138 @@
+---
+# MongoDB Community + mongosh + MongoDB Compass.
+#
+# Diferente de quase todas as outras roles daqui, esta NÃO usa repositório apt:
+# a MongoDB não publica o servidor para Ubuntu 26.04 nem para Debian 13 (o
+# porquê está no comentário de mongodb_versao, em group_vars/all.yml). O
+# caminho oficial que sobra é o tarball, que instalamos em /opt no mesmo
+# padrão da role metabase — download versionado no nome + serviço systemd.
+
+- name: Falhar com mensagem clara em arquitetura não suportada
+  ansible.builtin.fail:
+    msg: >-
+      A MongoDB publica o tarball do Linux só para x86_64 e aarch64, e esta
+      máquina é {{ ansible_facts.architecture }}. Não há o que instalar aqui.
+  when: mongodb_arch_mongosh == ''
+
+# --- Servidor --------------------------------------------------------
+
+- name: Criar o usuário de sistema do MongoDB
+  ansible.builtin.user:
+    name: "{{ mongodb_usuario }}"
+    system: true
+    shell: /usr/sbin/nologin
+    home: "{{ mongodb_dados }}"
+    create_home: false
+
+- name: Criar os diretórios do MongoDB
+  ansible.builtin.file:
+    path: "{{ item.caminho }}"
+    state: directory
+    owner: "{{ item.dono }}"
+    group: "{{ item.dono }}"
+    mode: "0755"
+  loop:
+    # Binários: de root, como qualquer coisa em /opt.
+    - { caminho: "{{ mongodb_home }}", dono: root }
+    # Dados e log: do mongod, que roda sem privilégio.
+    - { caminho: "{{ mongodb_dados }}", dono: "{{ mongodb_usuario }}" }
+    - { caminho: "{{ mongodb_log }}", dono: "{{ mongodb_usuario }}" }
+  loop_control:
+    label: "{{ item.caminho }}"
+
+# O "creates" evita rebaixar ~150 MB a cada "atualizar": o diretório carrega a
+# versão no nome, então trocar mongodb_versao é que dispara um download novo.
+- name: Baixar e extrair o MongoDB {{ mongodb_versao }}
+  ansible.builtin.unarchive:
+    src: "https://fastdl.mongodb.org/linux/mongodb-linux-{{ ansible_facts.architecture }}-{{ mongodb_alvo_tarball }}-{{ mongodb_versao }}.tgz"
+    dest: "{{ mongodb_home }}"
+    remote_src: true
+    creates: "{{ mongodb_dir }}/bin/mongod"
+    owner: root
+    group: root
+
+# O link deixa o mongod no PATH e é o que a unit do systemd chama. Como aponta
+# para o diretório versionado, trocar a versão muda o link — e o handler
+# transforma essa mudança em restart. Os outros binários do tarball (mongos, o
+# roteador de sharding) continuam em {{ mongodb_dir }}/bin, sem link: a VM de
+# aula roda um nó só.
+- name: Publicar o mongod em /usr/local/bin
+  ansible.builtin.file:
+    src: "{{ mongodb_dir }}/bin/mongod"
+    dest: /usr/local/bin/mongod
+    state: link
+  notify: reiniciar mongodb
+
+# --- mongosh ---------------------------------------------------------
+# O shell é o que o aluno usa na aula (e a única interface em ARM, onde o
+# Compass não existe). Desde o MongoDB 6.0 ele não vem no tarball do servidor.
+
+- name: Baixar e extrair o mongosh {{ mongosh_versao }}
+  ansible.builtin.unarchive:
+    src: "https://downloads.mongodb.com/compass/mongosh-{{ mongosh_versao }}-linux-{{ mongodb_arch_mongosh }}.tgz"
+    dest: "{{ mongodb_home }}"
+    remote_src: true
+    creates: "{{ mongosh_dir }}/bin/mongosh"
+    owner: root
+    group: root
+
+- name: Publicar o mongosh em /usr/local/bin
+  ansible.builtin.file:
+    src: "{{ mongosh_dir }}/bin/mongosh"
+    dest: /usr/local/bin/mongosh
+    state: link
+
+# --- Configuração e serviço ------------------------------------------
+
+- name: Configurar o mongod (/etc/mongod.conf)
+  ansible.builtin.template:
+    src: mongod.conf.j2
+    dest: /etc/mongod.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: reiniciar mongodb
+
+- name: Instalar o serviço systemd do MongoDB
+  ansible.builtin.template:
+    src: mongod.service.j2
+    dest: /etc/systemd/system/mongod.service
+    mode: "0644"
+  notify:
+    - recarregar systemd
+    - reiniciar mongodb
+
+- name: Habilitar e iniciar o MongoDB
+  ansible.builtin.service:
+    name: mongod
+    state: started
+    enabled: true
+
+# --- MongoDB Compass -------------------------------------------------
+# Só existe .deb amd64; a MongoDB não publica build arm64 do Compass para
+# Linux. Em ARM a role avisa e segue em frente, em vez de derrubar o playbook
+# inteiro por causa da interface gráfica.
+
+- name: Baixar o MongoDB Compass {{ mongodb_compass_versao }}
+  ansible.builtin.get_url:
+    url: "https://downloads.mongodb.com/compass/mongodb-compass_{{ mongodb_compass_versao }}_amd64.deb"
+    dest: "{{ mongodb_home }}/mongodb-compass_{{ mongodb_compass_versao }}_amd64.deb"
+    owner: root
+    group: root
+    mode: "0644"
+  when: ansible_facts.architecture == 'x86_64'
+
+# O apt resolve as dependências do .deb (GTK, NSS e afins) sozinho — por isso
+# instalamos por ele, e não por dpkg.
+- name: Instalar o MongoDB Compass
+  ansible.builtin.apt:
+    deb: "{{ mongodb_home }}/mongodb-compass_{{ mongodb_compass_versao }}_amd64.deb"
+  when: ansible_facts.architecture == 'x86_64'
+
+- name: Avisar que o Compass foi pulado nesta arquitetura
+  ansible.builtin.debug:
+    msg: >-
+      MongoDB Compass não instalado: a MongoDB só publica .deb amd64 e esta
+      máquina é {{ ansible_facts.architecture }}. O servidor e o mongosh estão
+      instalados normalmente — use "mongosh" no terminal.
+  when: ansible_facts.architecture != 'x86_64'

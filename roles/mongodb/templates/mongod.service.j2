@@ -1,0 +1,18 @@
+[Unit]
+Description=MongoDB - VM de aula
+Documentation=https://www.mongodb.com/docs/manual/
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User={{ mongodb_usuario }}
+Group={{ mongodb_usuario }}
+# Sem --fork: o systemd quer o processo em primeiro plano para acompanhá-lo.
+ExecStart=/usr/local/bin/mongod --config /etc/mongod.conf
+Restart=on-failure
+# Limite recomendado pela própria MongoDB: o storage engine abre muito arquivo
+# e o padrão do systemd (1024) aparece como aviso na subida.
+LimitNOFILE=64000
+
+[Install]
+WantedBy=multi-user.target

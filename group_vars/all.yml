@@ -82,6 +82,43 @@ metabase_site_nome: "VM de aula"
 metabase_banco_nome: "Postgres da aula"
 metabase_banco_dbname: "postgres"
 
+# --- MongoDB --------------------------------------------------------
+# Instalado pelo tarball oficial, e não por apt, por falta de alternativa: a
+# MongoDB ainda não publica o servidor para Ubuntu 26.04 (resolute) nem para
+# Debian 13 (trixie) — os repositórios existem, mas só trazem as ferramentas e
+# o mongosh. E nenhuma das duas distribuições empacota o MongoDB por conta
+# própria desde a troca da licença para SSPL. Confira em
+# https://repo.mongodb.org/apt/ubuntu/dists/ antes de migrar para apt.
+mongodb_versao: "8.0.29"
+# Usamos o build de Ubuntu 24.04 nas duas distribuições. O tarball só precisa
+# de libssl.so.3 e libcurl.so.4 em tempo de execução, que existem nas duas, e é
+# o único alvo com aarch64 — o de debian12 sai só em x86_64, o que deixaria a
+# VM em Apple Silicon sem MongoDB.
+mongodb_alvo_tarball: "ubuntu2404"
+mongodb_home: "/opt/mongodb"
+mongodb_dados: "/var/lib/mongodb"
+mongodb_log: "/var/log/mongodb"
+mongodb_porta: 27017
+# Usuário de sistema que roda o mongod (sem login, como o postgres).
+mongodb_usuario: "mongodb"
+
+# O mongosh saiu do tarball do servidor no 6.0 e virou download separado.
+mongosh_versao: "2.10.0"
+
+# Compass: só existe .deb amd64: não há build arm64 para Linux. Em ARM a role
+# avisa e segue, e o aluno usa o mongosh, que tem as duas arquiteturas.
+mongodb_compass_versao: "1.49.0"
+
+# Cada download escreve a arquitetura de um jeito: o servidor usa a do uname
+# (x86_64/aarch64), o mongosh usa x64/arm64 e o Compass usa a do dpkg (amd64).
+# ansible_facts.architecture traz a primeira; as outras saem deste mapa.
+mongodb_arch_mongosh: "{{ {'x86_64': 'x64', 'aarch64': 'arm64'}.get(ansible_facts.architecture, '') }}"
+
+# Diretórios que os tarballs criam ao serem extraídos em mongodb_home. Ficam
+# aqui porque a role os usa em três lugares (extração, links e unit).
+mongodb_dir: "{{ mongodb_home }}/mongodb-linux-{{ ansible_facts.architecture }}-{{ mongodb_alvo_tarball }}-{{ mongodb_versao }}"
+mongosh_dir: "{{ mongodb_home }}/mongosh-{{ mongosh_versao }}-linux-{{ mongodb_arch_mongosh }}"
+
 # --- DBeaver --------------------------------------------------------
 # Workspace padrão do DBeaver 21+ (o "workspace6").
 dbeaver_workspace: "{{ aluno_home }}/.local/share/DBeaverData/workspace6"

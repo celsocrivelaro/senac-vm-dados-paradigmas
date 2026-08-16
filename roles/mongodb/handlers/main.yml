@@ -1,0 +1,11 @@
+---
+# Mesma ordem das roles metabase e airflow: o daemon_reload precisa vir antes
+# do restart, senão o systemd reinicia o serviço com a unit antiga.
+- name: recarregar systemd
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+
+- name: reiniciar mongodb
+  ansible.builtin.systemd_service:
+    name: mongod
+    state: restarted
