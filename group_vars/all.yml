@@ -72,7 +72,7 @@ metabase_url: "http://localhost:{{ metabase_porta }}"
 # mesmos moldes do login do Airflow: fixa e igual para a turma inteira. É ela
 # que permite cadastrar o Postgres sem passar pelo assistente na tela.
 # O Metabase exige e-mail (não aceita usuário simples) para o login.
-metabase_admin_email: "senac@senac.local"
+metabase_admin_email: "estudante@sp.senac.br"
 metabase_admin_senha: "senac"
 metabase_admin_nome: "Aluno"
 metabase_admin_sobrenome: "Senac"

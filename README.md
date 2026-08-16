@@ -31,7 +31,7 @@ Ativo agora (veja `local.yml`):
   `python3-venv`). `pipx` e `Scrapy` são extras da mesma role, ligados por
   `python_instalar_pipx` e `python_instalar_scrapy`
 - **Metabase** em <http://localhost:4444> (JAR + systemd, Java 25), login
-  `senac@senac.local`/`senac`, já com o Postgres local cadastrado como
+  `estudante@sp.senac.br`/`senac`, já com o Postgres local cadastrado como
   **Postgres da aula** — o aluno abre a página e sai consultando
 
 > O assistente da primeira tela do Metabase não aparece: a role faz o mesmo
