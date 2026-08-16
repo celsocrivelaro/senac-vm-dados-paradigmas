@@ -46,3 +46,110 @@
     name: metabase
     state: started
     enabled: true
+
+# --- Configuração pela API -------------------------------------------
+# O Metabase não lê configuração de arquivo na edição open source: conta de
+# admin e bancos só entram pela API (é o que o assistente da tela faz por
+# baixo). Daqui para baixo tudo é chamada HTTP em localhost.
+
+# Os handlers só rodariam no fim do play. Se a unit mudou agora, a API abaixo
+# falaria com o processo antigo — ou com nenhum, no primeiro boot.
+- name: Aplicar as mudanças pendentes do serviço antes de falar com a API
+  ansible.builtin.meta: flush_handlers
+
+# O JAR sobe a JVM e migra o banco interno: numa VM de aula isso passa do
+# minuto na primeira vez. Sem esta espera, o setup abaixo bate em porta fechada.
+- name: Esperar o Metabase responder em {{ metabase_url }}
+  ansible.builtin.uri:
+    url: "{{ metabase_url }}/api/session/properties"
+  register: metabase_propriedades
+  until: metabase_propriedades.status == 200
+  retries: 60
+  delay: 5
+  changed_when: false
+  failed_when: false
+
+- name: Falhar com mensagem clara se o Metabase não subiu
+  ansible.builtin.fail:
+    msg: >-
+      O Metabase não respondeu em {{ metabase_url }} depois de 5 minutos.
+      Veja o que houve com "journalctl -u metabase -n 50". Causa comum: pouca
+      memória na VM — o Metabase pede uns 2 GB livres para subir.
+  when: metabase_propriedades.status != 200
+
+# setup-token só vem preenchido enquanto o assistente não foi concluído. Depois
+# da primeira execução ele é null, e esta tarefa simplesmente não roda de novo.
+- name: Criar a conta de administrador da turma (primeira execução)
+  ansible.builtin.uri:
+    url: "{{ metabase_url }}/api/setup"
+    method: POST
+    body_format: json
+    body:
+      token: "{{ metabase_propriedades.json['setup-token'] }}"
+      user:
+        first_name: "{{ metabase_admin_nome }}"
+        last_name: "{{ metabase_admin_sobrenome }}"
+        email: "{{ metabase_admin_email }}"
+        password: "{{ metabase_admin_senha }}"
+        site_name: "{{ metabase_site_nome }}"
+      prefs:
+        site_name: "{{ metabase_site_nome }}"
+        allow_tracking: false
+  when: metabase_propriedades.json['setup-token'] | default(false)
+
+- name: Abrir uma sessão na API do Metabase
+  ansible.builtin.uri:
+    url: "{{ metabase_url }}/api/session"
+    method: POST
+    body_format: json
+    body:
+      username: "{{ metabase_admin_email }}"
+      password: "{{ metabase_admin_senha }}"
+  register: metabase_sessao
+  changed_when: false
+  failed_when: false
+
+- name: Falhar com mensagem clara se o login de admin não bate
+  ansible.builtin.fail:
+    msg: >-
+      O Metabase recusou o login {{ metabase_admin_email }} (HTTP
+      {{ metabase_sessao.status }}). Isso acontece quando o assistente da tela
+      já foi concluído à mão com outra conta. Ajuste metabase_admin_email e
+      metabase_admin_senha em group_vars/all.yml para a conta que existe, ou
+      recomece do zero parando o serviço e apagando o banco interno:
+      "systemctl stop metabase && rm {{ metabase_home }}/metabase.mv.db".
+  when: metabase_sessao.status != 200
+
+# O POST abaixo não é idempotente: repetido, cadastra o mesmo Postgres várias
+# vezes. Por isso conferimos a lista antes. Versões recentes devolvem os bancos
+# dentro de "data"; o default cobre as antigas, que devolviam a lista crua.
+- name: Listar os bancos já cadastrados no Metabase
+  ansible.builtin.uri:
+    url: "{{ metabase_url }}/api/database"
+    headers:
+      X-Metabase-Session: "{{ metabase_sessao.json.id }}"
+  register: metabase_bancos
+  changed_when: false
+
+- name: Cadastrar o Postgres local no Metabase
+  ansible.builtin.uri:
+    url: "{{ metabase_url }}/api/database"
+    method: POST
+    headers:
+      X-Metabase-Session: "{{ metabase_sessao.json.id }}"
+    body_format: json
+    body:
+      engine: postgres
+      name: "{{ metabase_banco_nome }}"
+      details:
+        host: localhost
+        port: "{{ postgres_porta }}"
+        dbname: "{{ metabase_banco_dbname }}"
+        user: "{{ postgres_usuario_aluno }}"
+        password: "{{ postgres_senha_aluno }}"
+        # A conexão é por TCP em localhost, onde o pg_hba pede senha — o mesmo
+        # caminho que o DBeaver usa. Sem SSL: não sai da máquina.
+        ssl: false
+        tunnel-enabled: false
+    status_code: [200, 201]
+  when: metabase_banco_nome not in (metabase_bancos.json.data | default(metabase_bancos.json) | map(attribute='name') | list)

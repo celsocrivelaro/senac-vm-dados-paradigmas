@@ -12,6 +12,9 @@ execução, então não há variável para editar ao trocar de distribuição.
 
 Ativo agora (veja `local.yml`):
 
+- **PostgreSQL** (a versão empacotada pela distribuição) com a config
+  versionada em `/etc/postgresql` e a role de login do aluno já criada
+  (`estudante`/`estudante`, ajustável em `group_vars/all.yml`)
 - **DBeaver Community** (repositório apt oficial) já com a conexão
   `PostgreSQL local (aula)` criada
 - **VS Code** (repositório apt oficial da Microsoft) com as extensões de
@@ -21,27 +24,22 @@ Ativo agora (veja `local.yml`):
 - **Python**: os pacotes listados em `python_pacotes` (`python3-pip` e
   `python3-venv`). `pipx` e `Scrapy` são extras da mesma role, ligados por
   `python_instalar_pipx` e `python_instalar_scrapy`
+- **Metabase** em <http://localhost:4444> (JAR + systemd, Java 25), login
+  `senac@senac.local`/`senac`, já com o Postgres local cadastrado como
+  **Postgres da aula** — o aluno abre a página e sai consultando
 
-> Com a role `postgresql` desativada, a conexão que o DBeaver traz pronta
-> aponta para um Postgres que não existe na máquina. Ela continua válida se o
-> banco subir num container publicando a porta 5432 — só lembre de casar
-> usuário e senha com os do container (`postgres_usuario_aluno` e
-> `postgres_senha_aluno` em `group_vars/all.yml`, padrão
-> `estudante`/`estudante`).
+> O assistente da primeira tela do Metabase não aparece: a role faz o mesmo
+> caminho pela API (`/api/setup` e `/api/database`) na primeira execução, com
+> os valores `metabase_admin_*` de `group_vars/all.yml`. Se você concluir o
+> assistente à mão antes de rodar o playbook, a role para com uma mensagem
+> explicando como alinhar a conta ou recomeçar.
 
 Prontas no repositório, mas **desativadas** (descomente a linha em
 `local.yml` para ligar):
 
-- **PostgreSQL** (com config versionada em `/etc/postgresql`) + uma role de
-  login para o aluno
-
-- **Google Chrome** (repositório apt oficial do Google)
 - **Apache Airflow 3** (venv dedicado em `/opt/airflow`, como serviço systemd),
   em <http://localhost:9876>, login `senac`/`senac` — sem os DAGs de exemplo e
   com uma única conexão, `postgres_aula`, apontando para o Postgres local
-- **Metabase** em <http://localhost:4444> (JAR + systemd, Java 25). No primeiro
-  acesso o aluno cria a conta de admin pelo assistente — não dá para
-  pré-configurar isso, o Metabase exige o passo interativo.
 - **Lua 5.4** + `liblua5.4-dev` (role `common`, junto dos pacotes base)
 - **Rustup** (toolchain stable, no home do aluno)
 - **SWI-Prolog**
@@ -86,8 +84,8 @@ roles/
   dbeaver/             # repo apt oficial + data-sources.json do aluno
   docker/              # repo apt da Docker (URL e suite vindas dos fatos)
   vscode/              # repo apt da Microsoft + extensões do aluno
-  chrome/              # repo apt do Google
   python/              # pip, venv, pipx, Scrapy
+  metabase/            # JAR + serviço systemd + setup pela API
   airflow/             # venv + serviço systemd
   rust/  prolog/  clojure/
 ```

@@ -13,18 +13,19 @@
   become: true          # roda as tarefas com sudo por padrão
 
   roles:
+    # O postgresql vem antes do metabase de propósito: o Metabase é cadastrado
+    # apontando para este banco, que precisa estar de pé antes.
+    - postgresql   # PostgreSQL + configuração em /etc/postgresql
     - dbeaver      # DBeaver Community + conexão pronta com o Postgres local
     - vscode       # VS Code + extensões de Python e SQL
     - docker       # Docker Engine + Compose, com o aluno no grupo docker
     - python       # pacotes do Python listados em python_pacotes
+    - metabase     # Metabase (JAR + systemd), já conectado ao Postgres local
 
     # --- Desativadas por enquanto ------------------------------------
     # As roles continuam no repositório (roles/), prontas para uso.
     # Para ativar um componente, basta descomentar a linha.
-    # - postgresql # PostgreSQL + configuração em /etc/postgresql
-    # - chrome     # Google Chrome
     # - airflow    # Apache Airflow 3 (venv dedicado em /opt/airflow)
-    # - metabase   # Metabase (JAR + systemd, banco interno em H2)
     # - common     # pacotes base, utilitários, Lua 5.4
     # - python     # Python 3, pip, venv, pipx, Scrapy
     # - rust       # Rustup (instalado no home do aluno)

@@ -66,6 +66,21 @@ docker_pacotes:
 metabase_versao: "v0.63.5"
 metabase_home: "/opt/metabase"
 metabase_porta: 4444
+metabase_url: "http://localhost:{{ metabase_porta }}"
+
+# Conta de administrador criada pela API de setup na primeira execução, nos
+# mesmos moldes do login do Airflow: fixa e igual para a turma inteira. É ela
+# que permite cadastrar o Postgres sem passar pelo assistente na tela.
+# O Metabase exige e-mail (não aceita usuário simples) para o login.
+metabase_admin_email: "senac@senac.local"
+metabase_admin_senha: "senac"
+metabase_admin_nome: "Aluno"
+metabase_admin_sobrenome: "Senac"
+metabase_site_nome: "VM de aula"
+
+# Como o Postgres local aparece na lista de bancos do Metabase.
+metabase_banco_nome: "Postgres da aula"
+metabase_banco_dbname: "postgres"
 
 # --- DBeaver --------------------------------------------------------
 # Workspace padrão do DBeaver 21+ (o "workspace6").

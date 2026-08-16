@@ -11,6 +11,11 @@ Environment=MB_JETTY_PORT={{ metabase_porta }}
 # então o caminho aqui vai sem extensão.
 Environment=MB_DB_TYPE=h2
 Environment=MB_DB_FILE={{ metabase_home }}/metabase
+# Por padrão o Metabase recusaria a senha da turma: exige 6 caracteres e pelo
+# menos um dígito (MB_PASSWORD_COMPLEXITY=normal). Aqui o mínimo acompanha o
+# tamanho da senha configurada, então trocá-la em group_vars continua valendo.
+Environment=MB_PASSWORD_COMPLEXITY=weak
+Environment=MB_PASSWORD_LENGTH={{ metabase_admin_senha | length }}
 ExecStart=/usr/bin/java -jar {{ metabase_home }}/metabase-{{ metabase_versao }}.jar
 Restart=on-failure
 

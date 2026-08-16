@@ -1,7 +1,7 @@
 ---
 # Docker Engine — instalado pelo repositório apt oficial da Docker.
 #
-# Diferente das roles dbeaver/vscode/chrome, o repositório da Docker é separado
+# Diferente das roles dbeaver/vscode, o repositório da Docker é separado
 # por distribuição E por release: a URL leva "ubuntu" ou "debian", e a suite é o
 # codinome da versão. Os dois vêm dos fatos do Ansible, então a mesma role
 # funciona no Ubuntu 26.04 (resolute) e no Debian 13 (trixie) sem editar nada.
