@@ -41,6 +41,27 @@
     - recarregar systemd
     - reiniciar metabase
 
+# --- Escotilha de emergência -----------------------------------------
+# Numa VM onde o assistente da tela já foi concluído à mão, o setup-token não
+# existe mais e a conta da turma nunca foi criada — a role não tem como entrar.
+# Este bloco resolve, mas leva junto dashboards, perguntas e usuários salvos.
+# Por isso vem desligado e só roda quando você pede explicitamente:
+#   sudo ansible-pull ... -e metabase_recriar_banco_interno=true
+- name: Parar o Metabase para recriar o banco interno
+  ansible.builtin.service:
+    name: metabase
+    state: stopped
+  when: metabase_recriar_banco_interno | bool
+
+- name: Apagar o banco interno do Metabase
+  ansible.builtin.file:
+    path: "{{ metabase_home }}/{{ item }}"
+    state: absent
+  loop:
+    - metabase.mv.db
+    - metabase.trace.db
+  when: metabase_recriar_banco_interno | bool
+
 - name: Habilitar e iniciar o Metabase
   ansible.builtin.service:
     name: metabase
@@ -77,8 +98,14 @@
       memória na VM — o Metabase pede uns 2 GB livres para subir.
   when: metabase_propriedades.status != 200
 
-# setup-token só vem preenchido enquanto o assistente não foi concluído. Depois
-# da primeira execução ele é null, e esta tarefa simplesmente não roda de novo.
+# setup-token só vem preenchido enquanto o assistente não foi concluído: o
+# próprio Metabase o apaga assim que o primeiro usuário é criado. Depois disso
+# ele vem null e esta tarefa não roda mais.
+#
+# O "| length > 0" não é enfeite: desde o Ansible 2.19 o when: exige booleano,
+# e o token null chegaria como NoneType (ou como string, quando existe) —
+# os dois derrubam a tarefa. O default() sozinho não resolve, porque ele troca
+# valor indefinido, não valor nulo; daí o segundo argumento.
 - name: Criar a conta de administrador da turma (primeira execução)
   ansible.builtin.uri:
     url: "{{ metabase_url }}/api/setup"
@@ -95,7 +122,7 @@
       prefs:
         site_name: "{{ metabase_site_nome }}"
         allow_tracking: false
-  when: metabase_propriedades.json['setup-token'] | default(false)
+  when: metabase_propriedades.json['setup-token'] | default('', true) | length > 0
 
 - name: Abrir uma sessão na API do Metabase
   ansible.builtin.uri:
@@ -114,10 +141,12 @@
     msg: >-
       O Metabase recusou o login {{ metabase_admin_email }} (HTTP
       {{ metabase_sessao.status }}). Isso acontece quando o assistente da tela
-      já foi concluído à mão com outra conta. Ajuste metabase_admin_email e
-      metabase_admin_senha em group_vars/all.yml para a conta que existe, ou
-      recomece do zero parando o serviço e apagando o banco interno:
-      "systemctl stop metabase && rm {{ metabase_home }}/metabase.mv.db".
+      já foi concluído à mão com outra conta: o setup-token é consumido na
+      criação do primeiro usuário e não volta. Saídas: apontar
+      metabase_admin_email e metabase_admin_senha (group_vars/all.yml) para a
+      conta que já existe, ou recomeçar do zero repetindo o comando com
+      "-e metabase_recriar_banco_interno=true" — que apaga o banco interno,
+      dashboards e perguntas salvas junto.
   when: metabase_sessao.status != 200
 
 # O POST abaixo não é idempotente: repetido, cadastra o mesmo Postgres várias

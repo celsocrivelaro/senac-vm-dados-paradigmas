@@ -36,9 +36,12 @@ Ativo agora (veja `local.yml`):
 
 > O assistente da primeira tela do Metabase não aparece: a role faz o mesmo
 > caminho pela API (`/api/setup` e `/api/database`) na primeira execução, com
-> os valores `metabase_admin_*` de `group_vars/all.yml`. Se você concluir o
-> assistente à mão antes de rodar o playbook, a role para com uma mensagem
-> explicando como alinhar a conta ou recomeçar.
+> os valores `metabase_admin_*` de `group_vars/all.yml`. Numa VM onde alguém
+> já concluiu o assistente à mão, o `setup-token` foi consumido na criação do
+> primeiro usuário e não volta: a role para com uma mensagem pedindo que você
+> aponte `metabase_admin_email`/`metabase_admin_senha` para a conta existente
+> ou repita o comando com `-e metabase_recriar_banco_interno=true`, que apaga
+> o banco interno (dashboards e perguntas salvas vão junto).
 
 Prontas no repositório, mas **desativadas** (descomente a linha em
 `local.yml` para ligar):

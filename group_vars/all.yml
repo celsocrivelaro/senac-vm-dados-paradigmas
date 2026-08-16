@@ -82,6 +82,12 @@ metabase_site_nome: "VM de aula"
 metabase_banco_nome: "Postgres da aula"
 metabase_banco_dbname: "postgres"
 
+# Apaga o banco interno do Metabase para a role poder criar a conta da turma
+# numa VM onde alguém já concluiu o assistente à mão. Destrutivo (leva junto
+# dashboards e perguntas salvas), então só na linha de comando:
+#   sudo ansible-pull ... -e metabase_recriar_banco_interno=true
+metabase_recriar_banco_interno: false
+
 # --- MongoDB --------------------------------------------------------
 # Instalado pelo tarball oficial, e não por apt, por falta de alternativa: a
 # MongoDB ainda não publica o servidor para Ubuntu 26.04 (resolute) nem para
