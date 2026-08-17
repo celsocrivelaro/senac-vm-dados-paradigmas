@@ -12,6 +12,10 @@ execução, então não há variável para editar ao trocar de distribuição.
 
 Ativo agora (veja `local.yml`):
 
+- **Materiais da aula**: o repositório
+  [senac-ciencia-de-dados](https://github.com/celsocrivelaro/senac-ciencia-de-dados)
+  clonado em `~/senac-ciencia-de-dados`, e atualizado por `git pull` a cada
+  `atualizar`
 - **PostgreSQL** (a versão empacotada pela distribuição) com a config
   versionada em `/etc/postgresql` e a role de login do aluno já criada
   (`estudante`/`estudante`, ajustável em `group_vars/all.yml`)
@@ -100,6 +104,7 @@ roles/
   python/              # pip, venv, pipx, Scrapy
   mongodb/             # tarball + systemd, mongosh e o .deb do Compass
   neo4j/               # repo apt da Neo4j + senha inicial via neo4j-admin
+  repo_aula/           # clone/pull dos materiais no home do aluno
   metabase/            # JAR + serviço systemd + setup pela API
   airflow/             # venv + serviço systemd
   rust/  prolog/  clojure/
@@ -211,6 +216,15 @@ Use `--limit localhost` (já está no `update.sh`) para não aparecer.
   Debian 12 sai só em x86_64). Quando a MongoDB publicar para `resolute` e
   `trixie`, dá para simplificar a role para um `apt` comum — confira em
   <https://repo.mongodb.org/apt/ubuntu/dists/>.
+- **Materiais da aula**: a role `repo_aula` roda com `force: false` de
+  propósito. Com `force: true` o módulo `git` faria `reset --hard` e apagaria o
+  trabalho do aluno a cada `atualizar`; como está, ele se recusa a mexer quando
+  encontra alteração local em arquivo versionado, e a role imprime um aviso
+  dizendo o que fazer (`git stash` ou `git commit`) em vez de derrubar a
+  execução. Arquivos que o aluno criou não entram nessa conta — o módulo ignora
+  os não-versionados, então notebook novo nunca se perde. A URL é HTTPS, não
+  `git@github.com`: o repositório é público, e SSH exigiria distribuir uma
+  chave para cada VM da turma.
 - **Neo4j**: o repositório da Neo4j é o único aqui que **não** é separado por
   distribuição — a suite é sempre `stable` e o que muda é o componente
   (`5`, `latest`, ...). Os pacotes são `Architecture: all` (é Java), então

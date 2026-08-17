@@ -149,6 +149,15 @@ neo4j_marcador_senha: "/var/lib/neo4j/.senha-inicial-definida"
 neo4j_porta_http: 7474
 neo4j_porta_bolt: 7687
 
+# --- Repositório de materiais da aula --------------------------------
+# Vai por HTTPS, e não pelo git@github.com que o GitHub sugere: o repositório é
+# público, e SSH exigiria uma chave em cada VM da turma (o playbook roda como
+# root, então nem a chave do aluno serviria). Se algum dia o repositório virar
+# privado, trocar para SSH aqui é o de menos — o difícil é distribuir a chave.
+aula_repo_url: "https://github.com/celsocrivelaro/senac-ciencia-de-dados.git"
+aula_repo_branch: "main"
+aula_repo_dir: "{{ aluno_home }}/senac-ciencia-de-dados"
+
 # --- DBeaver --------------------------------------------------------
 # Workspace padrão do DBeaver 21+ (o "workspace6").
 dbeaver_workspace: "{{ aluno_home }}/.local/share/DBeaverData/workspace6"

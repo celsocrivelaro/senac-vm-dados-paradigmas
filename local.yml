@@ -23,6 +23,9 @@
     - mongodb      # MongoDB + mongosh (tarball + systemd) e o Compass
     - neo4j        # Neo4j Community (repo apt oficial) + cypher-shell
     - metabase     # Metabase (JAR + systemd), já conectado ao Postgres local
+    # Por último de propósito: é a role que mexe em arquivo do aluno, e assim
+    # o aviso de alteração local fica visível no fim da execução.
+    - repo_aula    # clona/atualiza os materiais da aula no home do aluno
 
     # --- Desativadas por enquanto ------------------------------------
     # As roles continuam no repositório (roles/), prontas para uso.

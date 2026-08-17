@@ -1,0 +1,55 @@
+---
+# Clona o repositório de materiais da aula no home do aluno e, nas execuções
+# seguintes, faz o pull. É a única role que mexe em arquivo de trabalho do
+# aluno, e não em software — daí o cuidado com alteração local, mais abaixo.
+
+# O aluno já precisa do git para rodar o ansible-pull, mas a role não conta com
+# isso: as roles daqui não dependem umas das outras.
+- name: Instalar o git
+  ansible.builtin.apt:
+    name: git
+    state: present
+    update_cache: true
+
+# O acl é o que permite ao Ansible trocar de root para o aluno sem esbarrar em
+# "Failed to set permissions on the temporary files" (as roles postgresql e
+# neo4j instalam pelo mesmo motivo).
+- name: Instalar o acl (para o Ansible virar o usuário do aluno)
+  ansible.builtin.apt:
+    name: acl
+    state: present
+
+# become_user: o clone tem que ficar do aluno, não de root — senão ele não
+# consegue nem salvar um notebook que abriu.
+#
+# force: false é o ponto mais importante desta role. Com force: true o módulo
+# faria "reset --hard" e apagaria o trabalho do aluno a cada "atualizar". Como
+# está, o próprio módulo se recusa a mexer quando encontra alteração local em
+# arquivo versionado, e a tarefa seguinte explica o que aconteceu. Arquivo novo
+# que o aluno criou não conta como alteração local: o módulo ignora os
+# não-versionados, então ninguém perde notebook novo.
+- name: Clonar ou atualizar o repositório de materiais da aula
+  ansible.builtin.git:
+    repo: "{{ aula_repo_url }}"
+    dest: "{{ aula_repo_dir }}"
+    version: "{{ aula_repo_branch }}"
+    update: true
+    force: false
+  become: true
+  become_user: "{{ aluno_usuario }}"
+  register: aula_repo
+  # Um aluno com arquivo modificado não pode derrubar o "atualizar" inteiro —
+  # o aviso da tarefa seguinte resolve melhor que uma execução vermelha.
+  failed_when: false
+
+# Em caso de sucesso o módulo devolve os SHAs "before" e "after"; a ausência do
+# "after" é o sinal de que ele não conseguiu.
+- name: Avisar quando o repositório da aula não pôde ser atualizado
+  ansible.builtin.debug:
+    msg: >-
+      O repositório da aula em {{ aula_repo_dir }} NÃO foi atualizado:
+      {{ aula_repo.msg | default('o git não informou o motivo') }}
+      Nada foi apagado. O caso comum é ter alteração sua em algum arquivo que
+      vem do repositório — salve o trabalho ("git stash" ou "git commit") e
+      rode o atualizar de novo. Arquivos que você criou não entram nessa conta.
+  when: aula_repo.after is not defined
