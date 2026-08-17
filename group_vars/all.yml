@@ -125,6 +125,30 @@ mongodb_arch_mongosh: "{{ {'x86_64': 'x64', 'aarch64': 'arm64'}.get(ansible_fact
 mongodb_dir: "{{ mongodb_home }}/mongodb-linux-{{ ansible_facts.architecture }}-{{ mongodb_alvo_tarball }}-{{ mongodb_versao }}"
 mongosh_dir: "{{ mongodb_home }}/mongosh-{{ mongosh_versao }}-linux-{{ mongodb_arch_mongosh }}"
 
+# --- Neo4j ----------------------------------------------------------
+# O repositório da Neo4j não é separado por distribuição: a suite é sempre
+# "stable" e o que muda é o componente. "latest" é a série corrente (2026.x);
+# "5" seria o 5.26 LTS. Ficamos no latest porque ele aceita Java 25 — a mesma
+# JRE que a role metabase instala — enquanto o 5.26 aceita só 17 ou 21, o que
+# significaria uma segunda JDK na VM. Versões em
+# https://debian.neo4j.com/dists/stable/latest/binary-amd64/Packages
+neo4j_componente: "latest"
+neo4j_versao: "2026.07.1"
+# O usuário é fixo do Neo4j ("neo4j") e não dá para trocar; só a senha.
+# Ela entra antes da primeira subida, via neo4j-admin. Atenção: mudar este
+# valor depois NÃO troca a senha de uma VM já instalada — o comando só funciona
+# antes do banco subir pela primeira vez. Para trocar numa VM em uso, rode no
+# Browser ou no cypher-shell:
+#   ALTER CURRENT USER SET PASSWORD FROM 'senac' TO 'nova';
+neo4j_senha: "senac"
+# Marcador de que a senha inicial já foi definida. O comando que a define
+# recusa rodar depois que o banco subiu, então ele roda uma vez só.
+neo4j_marcador_senha: "/var/lib/neo4j/.senha-inicial-definida"
+# Portas padrão, aqui só para o README e para quem for abrir o firewall:
+# 7474 é o Neo4j Browser (a interface web) e 7687 é o protocolo Bolt.
+neo4j_porta_http: 7474
+neo4j_porta_bolt: 7687
+
 # --- DBeaver --------------------------------------------------------
 # Workspace padrão do DBeaver 21+ (o "workspace6").
 dbeaver_workspace: "{{ aluno_home }}/.local/share/DBeaverData/workspace6"

@@ -21,6 +21,10 @@ Ativo agora (veja `local.yml`):
 - **MongoDB Compass** (`.deb` oficial) — a tela de conexão já abre sugerindo
   `mongodb://localhost:27017`, que é exatamente o banco local. **Só em amd64**:
   a MongoDB não publica build arm64 do Compass para Linux
+- **Neo4j Community** 2026.07 (repositório apt oficial) com o **Neo4j Browser**
+  em <http://localhost:7474> e o Bolt em `bolt://localhost:7687`, login
+  `neo4j`/`senac` já definido — sem a troca de senha obrigatória do primeiro
+  acesso. O `cypher-shell` entra junto, como dependência
 - **DBeaver Community** (repositório apt oficial) já com a conexão
   `PostgreSQL local (aula)` criada
 - **VS Code** (repositório apt oficial da Microsoft) com as extensões de
@@ -95,6 +99,7 @@ roles/
   vscode/              # repo apt da Microsoft + extensões do aluno
   python/              # pip, venv, pipx, Scrapy
   mongodb/             # tarball + systemd, mongosh e o .deb do Compass
+  neo4j/               # repo apt da Neo4j + senha inicial via neo4j-admin
   metabase/            # JAR + serviço systemd + setup pela API
   airflow/             # venv + serviço systemd
   rust/  prolog/  clojure/
@@ -206,6 +211,20 @@ Use `--limit localhost` (já está no `update.sh`) para não aparecer.
   Debian 12 sai só em x86_64). Quando a MongoDB publicar para `resolute` e
   `trixie`, dá para simplificar a role para um `apt` comum — confira em
   <https://repo.mongodb.org/apt/ubuntu/dists/>.
+- **Neo4j**: o repositório da Neo4j é o único aqui que **não** é separado por
+  distribuição — a suite é sempre `stable` e o que muda é o componente
+  (`5`, `latest`, ...). Os pacotes são `Architecture: all` (é Java), então
+  amd64 e arm64 saem de graça. Ficamos no componente `latest` (série 2026)
+  porque ele aceita **Java 25**, a mesma JRE que a role `metabase` instala; o
+  5.26 LTS aceita só 17 ou 21, o que exigiria uma segunda JDK na VM e deixaria
+  a armadilha de o `java` do PATH ser o 25, que ele recusa.
+  A senha do usuário `neo4j` é definida por `neo4j-admin dbms
+  set-initial-password` **antes da primeira subida** — é a única janela em que
+  o comando funciona, então ele roda uma vez só, guardado por um marcador em
+  `/var/lib/neo4j/.senha-inicial-definida`. Como o mínimo padrão é 8
+  caracteres e a senha da turma é `senac`, a role acrescenta um bloco marcado
+  ao fim do `neo4j.conf` baixando `dbms.security.auth_minimum_password_length`
+  para o tamanho de `neo4j_senha`.
 - **MongoDB Compass**: só existe `.deb` **amd64**; não há build arm64 para
   Linux. Numa VM ARM a role avisa e segue, sem derrubar o playbook — o aluno
   usa o `mongosh`, que tem as duas arquiteturas.

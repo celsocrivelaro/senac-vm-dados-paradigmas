@@ -1,0 +1,7 @@
+---
+# A unit vem do próprio pacote da Neo4j, então aqui não há daemon_reload a
+# fazer — diferente das roles metabase, airflow e mongodb, onde a unit é nossa.
+- name: reiniciar neo4j
+  ansible.builtin.systemd_service:
+    name: neo4j
+    state: restarted
